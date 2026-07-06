@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Heart rate monitor">
+  <rect width="512" height="512" rx="96" fill="#0f1419"/>
+  <path
+    d="M96 288 L160 224 L224 304 L320 160 L416 288"
+    fill="none"
+    stroke="#c41e3a"
+    stroke-width="28"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M352 128 C352 96 384 80 416 96 C448 112 448 160 416 192 L352 256 L288 192 C256 160 256 112 288 96 C320 80 352 96 352 128 Z"
+    fill="#c41e3a"
+  />
+</svg>
