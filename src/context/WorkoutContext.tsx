@@ -7,18 +7,25 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { buildWorkoutReport } from '../analytics/buildReport';
 import { buildZoneConfig } from '../analytics/zones';
 import { heartRateService } from '../ble/heartRateService';
 import { getUserSettings } from '../storage/workoutStore';
-import type { WorkoutSession } from '../types';
+import type { WorkoutReport, WorkoutSession } from '../types';
 import {
   workoutSessionManager,
   type WorkoutSessionSnapshot,
 } from '../workout/sessionManager';
 
+interface StopWorkoutResult {
+  session: WorkoutSession;
+  report: WorkoutReport;
+}
+
 interface WorkoutContextValue extends WorkoutSessionSnapshot {
+  lastReport: WorkoutReport | null;
   startWorkout: (deviceName?: string) => Promise<void>;
-  stopWorkout: () => WorkoutSession;
+  stopWorkout: () => Promise<StopWorkoutResult>;
   resetWorkout: () => void;
   isRecording: boolean;
   isCompleted: boolean;
@@ -30,6 +37,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const [snapshot, setSnapshot] = useState<WorkoutSessionSnapshot>(() =>
     workoutSessionManager.getSnapshot(),
   );
+  const [lastReport, setLastReport] = useState<WorkoutReport | null>(null);
 
   useEffect(() => {
     return workoutSessionManager.subscribe(setSnapshot);
@@ -44,11 +52,22 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const startWorkout = useCallback(async (deviceName?: string) => {
     const settings = await getUserSettings();
     const zoneConfig = buildZoneConfig(settings);
+    setLastReport(null);
     workoutSessionManager.start(deviceName, zoneConfig);
   }, []);
 
-  const stopWorkout = useCallback(() => {
-    return workoutSessionManager.stop();
+  const stopWorkout = useCallback(async () => {
+    const zoneConfig = workoutSessionManager.getSnapshot().zoneConfig;
+    if (!zoneConfig) {
+      throw new Error('Workout zone configuration is missing.');
+    }
+
+    const session = workoutSessionManager.stop();
+    const settings = await getUserSettings();
+    const report = buildWorkoutReport(session, zoneConfig, settings);
+    setLastReport(report);
+
+    return { session, report };
   }, []);
 
   const resetWorkout = useCallback(() => {
@@ -58,13 +77,14 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       ...snapshot,
+      lastReport,
       startWorkout,
       stopWorkout,
       resetWorkout,
       isRecording: snapshot.recordingState === 'recording',
       isCompleted: snapshot.recordingState === 'completed',
     }),
-    [snapshot, startWorkout, stopWorkout, resetWorkout],
+    [snapshot, lastReport, startWorkout, stopWorkout, resetWorkout],
   );
 
   return (

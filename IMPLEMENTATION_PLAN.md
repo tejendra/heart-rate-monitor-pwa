@@ -403,12 +403,12 @@ heart-rate-monitor-pwa/
 
 ### Phase 4 — Analytics & Report (Days 4–6)
 
-- [ ] Karvonen (HRR) zone boundary calculation, classification, and zone time aggregation
-- [ ] Avg/max HR, duration
-- [ ] Calorie estimation (settings-aware)
-- [ ] HRV (RMSSD, SDNN) with artifact filtering
-- [ ] Zone-over-time chart and zone summary chart
-- [ ] Unit tests for all analytics (fixed fixture data)
+- [x] Karvonen (HRR) zone boundary calculation, classification, and zone time aggregation
+- [x] Avg/max HR, duration
+- [x] Calorie estimation (settings-aware)
+- [x] HRV (RMSSD, SDNN) with artifact filtering
+- [x] Zone-over-time chart and zone summary chart
+- [x] Unit tests for all analytics (fixed fixture data)
 
 **Exit criteria:** Stop workout → report shows all required metrics with plausible values.
 

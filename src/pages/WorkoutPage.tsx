@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ZONE_LABELS } from '../analytics/zones';
 import type { HeartRateZone } from '../types';
 import { useHeartRateMonitor } from '../context/HeartRateContext';
@@ -30,6 +30,7 @@ function zoneClassName(zone: HeartRateZone | 'below' | null) {
 }
 
 export function WorkoutPage() {
+  const navigate = useNavigate();
   const { status, isConnected } = useHeartRateMonitor();
   const {
     elapsedMs,
@@ -49,7 +50,7 @@ export function WorkoutPage() {
     await startWorkout(status.deviceName);
   }
 
-  function handleStop() {
+  async function handleStop() {
     if (isRecording && elapsedMs < 30_000) {
       const shouldStop = window.confirm(
         'This workout is under 30 seconds. Stop anyway?',
@@ -59,7 +60,8 @@ export function WorkoutPage() {
       }
     }
 
-    stopWorkout();
+    const { report } = await stopWorkout();
+    navigate(`/report/${report.id}`);
   }
 
   return (
@@ -103,7 +105,7 @@ export function WorkoutPage() {
           <button
             type="button"
             className="button button--primary"
-            onClick={handleStop}
+            onClick={() => void handleStop()}
           >
             Stop Workout
           </button>
@@ -122,8 +124,8 @@ export function WorkoutPage() {
           <div className="workout-complete">
             <p className="workout-complete__title">Workout recorded</p>
             <p className="hint">
-              {session.samples.length} samples over {formatElapsed(elapsedMs)}.
-              Report generation arrives in Phase 4.
+              {session.samples.length} samples captured. View your report for
+              stats and zone breakdown.
             </p>
             <button
               type="button"
