@@ -19,12 +19,14 @@ export interface HeartRateConnectionStatus {
 }
 
 type StatusListener = (status: HeartRateConnectionStatus) => void;
+type SampleListener = (sample: HeartRateSample) => void;
 
 export class HeartRateService {
   private device: BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
   private status: HeartRateConnectionStatus = { state: 'disconnected' };
   private listeners = new Set<StatusListener>();
+  private sampleListeners = new Set<SampleListener>();
   private onCharacteristicValue: ((event: Event) => void) | null = null;
   private onDeviceDisconnect: ((event: Event) => void) | null = null;
 
@@ -33,6 +35,13 @@ export class HeartRateService {
     listener(this.status);
     return () => {
       this.listeners.delete(listener);
+    };
+  }
+
+  onSample(listener: SampleListener): () => void {
+    this.sampleListeners.add(listener);
+    return () => {
+      this.sampleListeners.delete(listener);
     };
   }
 
@@ -83,6 +92,7 @@ export class HeartRateService {
           value.byteOffset + value.byteLength,
         );
         const sample = toHeartRateSample(bytes);
+        this.notifySample(sample);
         this.updateStatus({
           state: 'connected',
           deviceName: this.device?.name ?? 'Heart rate monitor',
@@ -176,6 +186,12 @@ export class HeartRateService {
     this.status = next;
     for (const listener of this.listeners) {
       listener(this.status);
+    }
+  }
+
+  private notifySample(sample: HeartRateSample) {
+    for (const listener of this.sampleListeners) {
+      listener(sample);
     }
   }
 }

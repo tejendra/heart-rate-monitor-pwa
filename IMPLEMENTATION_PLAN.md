@@ -395,9 +395,9 @@ heart-rate-monitor-pwa/
 
 ### Phase 3 — Workout Recording (Days 3–4)
 
-- [ ] Session start/stop with sample buffer
-- [ ] Elapsed timer and current zone display
-- [ ] Wire sample ingestion from BLE into session manager
+- [x] Session start/stop with sample buffer
+- [x] Elapsed timer and current zone display
+- [x] Wire sample ingestion from BLE into session manager
 
 **Exit criteria:** Complete workout produces in-memory sample array with timestamps.
 

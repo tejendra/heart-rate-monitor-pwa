@@ -272,3 +272,51 @@ button {
   opacity: 0.55;
   pointer-events: none;
 }
+
+.zone-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: #fff;
+}
+
+.zone-pill--below {
+  background: #3a4250;
+}
+
+.zone-pill--1 {
+  background: #2f5f8f;
+}
+
+.zone-pill--2 {
+  background: #2f8f5a;
+}
+
+.zone-pill--3 {
+  background: #8f8a2f;
+}
+
+.zone-pill--4 {
+  background: #8f5a2f;
+}
+
+.zone-pill--5 {
+  background: var(--accent);
+}
+
+.metric-row--zone {
+  align-items: center;
+}
+
+.workout-complete {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.workout-complete__title {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+}
