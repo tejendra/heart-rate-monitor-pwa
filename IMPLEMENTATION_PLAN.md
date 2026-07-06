@@ -386,10 +386,10 @@ heart-rate-monitor-pwa/
 
 ### Phase 2 — BLE Connection (Days 2–3)
 
-- [ ] Implement Heart Rate GATT parser (UINT8/UINT16, RR intervals)
-- [ ] Connect/disconnect UI with error handling
-- [ ] Live BPM display from real device
-- [ ] Unit tests for parser with spec byte arrays
+- [x] Implement Heart Rate GATT parser (UINT8/UINT16, RR intervals)
+- [x] Connect/disconnect UI with error handling
+- [x] Live BPM display from real device
+- [x] Unit tests for parser with spec byte arrays
 
 **Exit criteria:** Stable live BPM from a physical HR strap/chest monitor on Chrome/Android.
 

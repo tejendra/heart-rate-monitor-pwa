@@ -215,3 +215,60 @@ button {
   margin: 0;
   font-weight: 600;
 }
+
+.banner {
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.banner--warning {
+  border-color: #6a4a14;
+  background: #2a2114;
+  color: #f0d9a8;
+}
+
+.status-value--connected {
+  color: #7ddea6;
+}
+
+.live-bpm {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.live-bpm__value {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.live-bpm__label {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+}
+
+.hint--error {
+  color: #ff8f8f;
+}
+
+.hint--warning {
+  color: #f0d9a8;
+}
+
+.inline-link {
+  display: inline-block;
+  margin-left: 0.35rem;
+  color: #fff;
+  text-decoration: underline;
+}
+
+.button--disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
