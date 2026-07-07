@@ -60,7 +60,7 @@ export function aggregateZoneTime(
     const deltaSec = Math.max(0, (nextTimestamp - sample.timestamp) / 1000);
     const zone = classifyBpm(sample.bpm, zoneConfig);
 
-    if (zone !== 'below') {
+    if (zone !== 0) {
       zoneTimeSec[zone] += deltaSec;
     }
   }
@@ -83,7 +83,7 @@ export function buildZoneSeries(
 
   const pushBucket = (sample: HeartRateSample) => {
     const zone = classifyBpm(sample.bpm, zoneConfig);
-    if (zone === 'below') {
+    if (zone === 0) {
       return;
     }
 

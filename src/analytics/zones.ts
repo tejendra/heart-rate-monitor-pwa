@@ -5,7 +5,7 @@ import type {
   ZoneConfig,
 } from '../types';
 
-export type ZoneClassification = HeartRateZone | 'below';
+export type ZoneClassification = 0 | HeartRateZone;
 
 const HRR_FRACTIONS: Array<{ zone: HeartRateZone; min: number; max: number }> =
   [
@@ -77,7 +77,7 @@ export function classifyBpm(
   if (zoneConfig.method === 'karvonen') {
     const zone1Min = zoneConfig.bounds[1].minBpm;
     if (bpm < zone1Min) {
-      return 'below';
+      return 0;
     }
   }
 
@@ -89,7 +89,7 @@ export function classifyBpm(
   }
 
   const zone5 = zoneConfig.bounds[5];
-  if (bpm >= zone5.minBpm && bpm <= zone5.maxBpm) {
+  if (bpm >= zone5.minBpm) {
     return 5;
   }
 
@@ -97,7 +97,14 @@ export function classifyBpm(
     return 1;
   }
 
-  return 'below';
+  return 0;
+}
+
+export function isAboveZone5Target(
+  bpm: number,
+  zoneConfig: ZoneConfig,
+): boolean {
+  return bpm > zoneConfig.bounds[5].maxBpm;
 }
 
 export const ZONE_LABELS: Record<HeartRateZone, string> = {

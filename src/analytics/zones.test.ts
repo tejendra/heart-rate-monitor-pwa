@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildZoneConfig,
   classifyBpm,
+  isAboveZone5Target,
   recommendMaxHeartRateFromAge,
 } from './zones';
 import { DEFAULT_USER_SETTINGS } from '../types';
@@ -32,11 +33,24 @@ describe('zones', () => {
       restingHeartRate: 60,
     });
 
-    expect(classifyBpm(120, config)).toBe('below');
+    expect(classifyBpm(120, config)).toBe(0);
     expect(classifyBpm(130, config)).toBe(1);
     expect(classifyBpm(145, config)).toBe(2);
     expect(classifyBpm(160, config)).toBe(3);
     expect(classifyBpm(170, config)).toBe(4);
     expect(classifyBpm(185, config)).toBe(5);
+    expect(classifyBpm(190, config)).toBe(5);
+    expect(classifyBpm(195, config)).toBe(5);
+  });
+
+  it('flags heart rate above the zone 5 target', () => {
+    const config = buildZoneConfig({
+      ...DEFAULT_USER_SETTINGS,
+      maxHeartRate: 190,
+      restingHeartRate: 60,
+    });
+
+    expect(isAboveZone5Target(190, config)).toBe(false);
+    expect(isAboveZone5Target(191, config)).toBe(true);
   });
 });

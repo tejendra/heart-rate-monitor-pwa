@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ZONE_LABELS } from '../analytics/zones';
+import {
+  isAboveZone5Target,
+  ZONE_LABELS,
+  type ZoneClassification,
+} from '../analytics/zones';
 import { BluetoothUnsupportedBanner } from '../components/BluetoothUnsupportedBanner';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
 import { LongPressStopButton } from '../components/LongPressStopButton';
@@ -10,31 +14,31 @@ import { useHeartRateMonitor } from '../context/HeartRateContext';
 import { useWorkoutSession } from '../context/WorkoutContext';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { getRecentWorkouts } from '../storage/workoutStore';
-import type { HeartRateZone, WorkoutReport } from '../types';
+import type { WorkoutReport } from '../types';
 import { formatElapsed } from '../workout/sessionManager';
 
 function formatBpm(bpm?: number) {
   return bpm !== undefined ? String(bpm) : '--';
 }
 
-function formatZone(zone: HeartRateZone | 'below' | null) {
+function formatZone(zone: ZoneClassification | null) {
   if (zone === null) {
     return '--';
   }
 
-  if (zone === 'below') {
-    return 'Below zone 1';
+  if (zone === 0) {
+    return 'Zone 0';
   }
 
   return `Zone ${zone} · ${ZONE_LABELS[zone]}`;
 }
 
-function zoneClassName(zone: HeartRateZone | 'below' | null) {
+function zoneClassName(zone: ZoneClassification | null) {
   if (zone === null) {
     return '';
   }
 
-  return zone === 'below' ? 'zone-pill zone-pill--below' : `zone-pill zone-pill--${zone}`;
+  return `zone-pill zone-pill--${zone}`;
 }
 
 export function HomePage() {
@@ -50,6 +54,7 @@ export function HomePage() {
   const {
     elapsedMs,
     currentZone,
+    zoneConfig,
     isRecording,
     isCompleted,
     startWorkout,
@@ -63,6 +68,10 @@ export function HomePage() {
 
   const latestBpm = status.latestSample?.bpm;
   const contactDetected = status.latestSample?.contactDetected;
+  const aboveZone5Target =
+    latestBpm !== undefined &&
+    zoneConfig !== null &&
+    isAboveZone5Target(latestBpm, zoneConfig);
   const disconnectedDuringWorkout =
     isRecording && !isConnected && Boolean(status.error);
 
@@ -216,6 +225,12 @@ export function HomePage() {
               {formatZone(currentZone)}
             </strong>
           </div>
+
+          {aboveZone5Target && (
+            <p className="hint hint--warning" role="status">
+              Heart rate is above your zone 5 target — consider slowing down.
+            </p>
+          )}
 
           {isRecording ? (
             <LongPressStopButton onStop={() => void handleStop()} />
