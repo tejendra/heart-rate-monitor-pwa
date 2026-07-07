@@ -1,4 +1,8 @@
 import type { UserSettings, WorkoutReport, ZoneConfig } from '../types';
+import {
+  haveReportZonesChanged,
+  refreshReportZones,
+} from '../analytics/buildReport';
 import { getDb, getDefaultSettings, SETTINGS_KEY, STORES } from './db';
 
 type StoredUserSettings = UserSettings & { weightKg?: number };
@@ -57,7 +61,17 @@ export async function saveWorkout(report: WorkoutReport): Promise<void> {
 
 export async function getWorkout(id: string): Promise<WorkoutReport | undefined> {
   const db = await getDb();
-  return db.get(STORES.workouts, id);
+  const report = await db.get(STORES.workouts, id);
+  if (!report) {
+    return undefined;
+  }
+
+  const refreshed = refreshReportZones(report);
+  if (haveReportZonesChanged(report, refreshed)) {
+    await saveWorkout(refreshed);
+  }
+
+  return refreshed;
 }
 
 export async function getAllWorkouts(): Promise<WorkoutReport[]> {

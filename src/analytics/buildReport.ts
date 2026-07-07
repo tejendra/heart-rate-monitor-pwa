@@ -42,3 +42,23 @@ export function buildWorkoutReport(
     appVersion: APP_VERSION,
   };
 }
+
+export function refreshReportZones(report: WorkoutReport): WorkoutReport {
+  const endedAt = Date.parse(report.endedAt);
+
+  return {
+    ...report,
+    zoneTimeSec: aggregateZoneTime(report.samples, report.zoneConfig, endedAt),
+    zoneSeries: buildZoneSeries(report.samples, report.zoneConfig),
+  };
+}
+
+export function haveReportZonesChanged(
+  before: WorkoutReport,
+  after: WorkoutReport,
+): boolean {
+  return (
+    JSON.stringify(before.zoneTimeSec) !== JSON.stringify(after.zoneTimeSec) ||
+    JSON.stringify(before.zoneSeries) !== JSON.stringify(after.zoneSeries)
+  );
+}

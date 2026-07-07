@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildWorkoutReport } from './buildReport';
+import {
+  buildWorkoutReport,
+  haveReportZonesChanged,
+  refreshReportZones,
+} from './buildReport';
 import { buildZoneConfig } from './zones';
 import { DEFAULT_USER_SETTINGS } from '../types';
 import type { WorkoutSession } from '../types';
@@ -46,5 +50,45 @@ describe('buildWorkoutReport', () => {
     expect(report.zoneSeries.length).toBeGreaterThan(0);
     expect(report.samples).toHaveLength(4);
     expect(report.appVersion).toBe('1.0.0');
+  });
+
+  it('recalculates zone totals from stored samples', () => {
+    const zoneConfig = buildZoneConfig(DEFAULT_USER_SETTINGS);
+    const startedAt = Date.parse('2026-07-06T12:00:00.000Z');
+    const endedAt = Date.parse('2026-07-06T12:05:00.000Z');
+    const report = buildWorkoutReport(
+      {
+        id: 'workout-2',
+        startedAt,
+        endedAt,
+        samples: [
+          { timestamp: startedAt, bpm: 195 },
+          { timestamp: endedAt, bpm: 195 },
+        ],
+      },
+      zoneConfig,
+      DEFAULT_USER_SETTINGS,
+    );
+
+    const staleReport = {
+      ...report,
+      zoneTimeSec: {
+        1: 0,
+        2: 0,
+        3: 0,
+        4: 0,
+        5: 0,
+      },
+      zoneSeries: [],
+    };
+
+    const refreshed = refreshReportZones(staleReport);
+
+    expect(refreshed.zoneTimeSec[5]).toBeGreaterThan(0);
+    expect(refreshed.zoneSeries.length).toBeGreaterThan(0);
+    expect(haveReportZonesChanged(staleReport, refreshed)).toBe(true);
+    expect(haveReportZonesChanged(refreshed, refreshReportZones(refreshed))).toBe(
+      false,
+    );
   });
 });
