@@ -23,7 +23,7 @@ export function estimateCalories({
   const restingHeartRate = zoneConfig.restingHeartRate;
   const weightKg = getWeightKg(settings.weight, settings.weightUnit);
 
-  if (weightKg !== undefined && settings.age !== undefined) {
+  if (weightKg !== undefined && settings.age != null) {
     const kilojoules =
       durationMin *
       (0.6309 * avgHeartRate + 0.1988 * weightKg + 0.2017 * settings.age);

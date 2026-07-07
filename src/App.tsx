@@ -7,11 +7,14 @@ import { HomePage } from './pages/HomePage';
 import { ReportPage } from './pages/ReportPage';
 import { SettingsPage } from './pages/SettingsPage';
 
+const routerBasename =
+  import.meta.env.BASE_URL.replace(/\/$/, '') || '/';
+
 export function App() {
   return (
     <HeartRateProvider>
       <WorkoutProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
           <Routes>
             <Route element={<Layout />}>
               <Route index element={<HomePage />} />

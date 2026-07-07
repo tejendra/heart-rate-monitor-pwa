@@ -101,7 +101,7 @@ export function SettingsPage() {
 
   const zoneConfig = useMemo(() => buildZoneConfig(form), [form]);
   const recommendedMaxHeartRate =
-    form.age !== undefined ? recommendMaxHeartRateFromAge(form.age) : null;
+    form.age != null ? recommendMaxHeartRateFromAge(form.age) : null;
   const weightBounds = getWeightInputBounds(form.weightUnit);
 
   function handleWeightUnitChange(nextUnit: WeightUnit) {
@@ -110,7 +110,7 @@ export function SettingsPage() {
         return current;
       }
 
-      if (current.weight === undefined) {
+      if (current.weight == null) {
         return { ...current, weightUnit: nextUnit };
       }
 

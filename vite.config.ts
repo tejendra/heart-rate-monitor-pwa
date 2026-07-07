@@ -2,7 +2,10 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
+const base = process.env.VITE_BASE ?? '/';
+
 export default defineConfig(({ mode }) => ({
+  base,
   server: {
     host: true,
     // Allow Cloudflare/ngrok/etc. tunnel hostnames when testing on a phone
@@ -25,7 +28,7 @@ export default defineConfig(({ mode }) => ({
         theme_color: '#c41e3a',
         background_color: '#0f1419',
         display: 'standalone',
-        start_url: '/',
+        start_url: base,
         icons: [
           {
             src: 'icons/icon-192.png',
