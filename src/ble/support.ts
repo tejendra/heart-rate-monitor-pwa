@@ -2,12 +2,24 @@ export type BluetoothSupportReason =
   | 'supported'
   | 'missing-api'
   | 'not-chrome'
-  | 'insecure-context';
+  | 'insecure-context'
+  | 'ios-unsupported';
 
 export interface BluetoothSupportStatus {
   supported: boolean;
   reason: BluetoothSupportReason;
   message: string;
+}
+
+export function isIosDevice(): boolean {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  return (
+    /iPad|iPhone|iPod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
 }
 
 function isChromeBrowser(): boolean {
@@ -28,6 +40,15 @@ export function getBluetoothSupportStatus(): BluetoothSupportStatus {
       reason: 'insecure-context',
       message:
         'Web Bluetooth requires HTTPS. Use localhost, an HTTPS tunnel, or a secure dev server.',
+    };
+  }
+
+  if (isIosDevice()) {
+    return {
+      supported: false,
+      reason: 'ios-unsupported',
+      message:
+        'Web Bluetooth is not available on iPhone or iPad. Use Chrome on Android or Chrome on desktop to connect a heart rate monitor. Saved workout history can still be viewed here if you used another device.',
     };
   }
 

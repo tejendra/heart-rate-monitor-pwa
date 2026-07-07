@@ -424,11 +424,11 @@ heart-rate-monitor-pwa/
 
 ### Phase 6 — Polish & Release (Days 7–8)
 
-- [ ] Loading/error/empty states
-- [ ] iOS unsupported-browser messaging
-- [ ] Accessibility: focus order, aria labels on charts/buttons
-- [ ] README: setup, HTTPS dev, supported browsers, test devices
-- [ ] Manual QA checklist (below)
+- [x] Loading/error/empty states
+- [x] iOS unsupported-browser messaging
+- [x] Accessibility: focus order, aria labels on charts/buttons
+- [x] README: setup, HTTPS dev, supported browsers, test devices
+- [x] Manual QA checklist (below)
 
 **Exit criteria:** v1.0 tagged; README documents usage and limitations.
 

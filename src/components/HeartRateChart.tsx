@@ -36,18 +36,25 @@ export function HeartRateChart({ report }: { report: WorkoutReport }) {
   if (data.length === 0) {
     return (
       <div className="chart-card">
-        <h3>Heart rate over time</h3>
+        <h3 id="heart-rate-chart-title">Heart rate over time</h3>
         <p className="empty-state">Not enough data to chart heart rate.</p>
       </div>
     );
   }
 
+  const chartSummary = `Heart rate ranged from ${Math.min(...data.map((point) => point.bpm))} to ${Math.max(...data.map((point) => point.bpm))} beats per minute across ${data.length} points.`;
+
   const zones = [1, 2, 3, 4, 5] as const;
 
   return (
     <div className="chart-card">
-      <h3>Heart rate over time</h3>
-      <div className="chart-container">
+      <h3 id="heart-rate-chart-title">Heart rate over time</h3>
+      <div
+        className="chart-container"
+        role="img"
+        aria-labelledby="heart-rate-chart-title"
+        aria-label={chartSummary}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
             {zones.map((zone) => {

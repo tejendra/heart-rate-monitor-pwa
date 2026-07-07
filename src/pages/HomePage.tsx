@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { BluetoothUnsupportedBanner } from '../components/BluetoothUnsupportedBanner';
+import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { useHeartRateMonitor } from '../context/HeartRateContext';
 
 function formatBpm(bpm?: number) {
@@ -45,43 +46,54 @@ export function HomePage() {
   }
 
   return (
-    <section className="page">
-      <h2>Connect</h2>
+    <section className="page" aria-labelledby="home-title">
+      <h2 id="home-title">Connect</h2>
       <p className="page-description">
         Pair a Bluetooth heart rate monitor and start recording workouts in your
         browser.
-        <a href='https://ultimately-hoping-reaches-composition.trycloudflare.com/'>Test on a phone</a>
       </p>
 
+      <PwaInstallPrompt />
       <BluetoothUnsupportedBanner />
 
       <div className="card">
-        <p className="status-label">Connection status</p>
+        <p className="status-label" id="connection-status-label">
+          Connection status
+        </p>
         <p
-          className={`status-value ${status.state === 'connected' ? 'status-value--connected' : ''
-            }`}
+          className={`status-value ${
+            status.state === 'connected' ? 'status-value--connected' : ''
+          }`}
+          role="status"
+          aria-live="polite"
+          aria-labelledby="connection-status-label"
         >
           {connectionLabel()}
         </p>
 
         {isConnected && (
-          <div className="live-bpm">
+          <div className="live-bpm" aria-live="polite" aria-label="Live heart rate">
             <p className="live-bpm__value">{formatBpm(latestBpm)}</p>
             <p className="live-bpm__label">Live BPM</p>
             {contactDetected === false && (
-              <p className="hint hint--warning">
+              <p className="hint hint--warning" role="status">
                 Sensor contact not detected. Adjust your strap.
               </p>
             )}
           </div>
         )}
 
-        {status.error && <p className="hint hint--error">{status.error}</p>}
+        {status.error && (
+          <p className="hint hint--error" role="alert">
+            {status.error}
+          </p>
+        )}
 
         {isConnected ? (
           <button
             type="button"
             className="button button--secondary"
+            aria-label="Disconnect heart rate monitor"
             onClick={() => void handleDisconnect()}
           >
             Disconnect
@@ -90,6 +102,8 @@ export function HomePage() {
           <button
             type="button"
             className="button button--primary"
+            aria-label="Connect heart rate monitor"
+            aria-busy={isConnecting}
             onClick={() => void handleConnect()}
             disabled={!support.supported || isConnecting}
           >
@@ -101,8 +115,9 @@ export function HomePage() {
       <div className="quick-links">
         <Link
           to="/workout"
-          className={`button button--secondary ${!isConnected ? 'button--disabled' : ''
-            }`}
+          className={`button button--secondary ${
+            !isConnected ? 'button--disabled' : ''
+          }`}
           aria-disabled={!isConnected}
           onClick={(event) => {
             if (!isConnected) {

@@ -51,6 +51,7 @@ button {
   flex-direction: column;
   max-width: 480px;
   margin: 0 auto;
+  position: relative;
 }
 
 .app-header {
@@ -230,6 +231,32 @@ button {
   border-color: #6a4a14;
   background: #2a2114;
   color: #f0d9a8;
+}
+
+.banner--info {
+  border-color: #2f5f8f;
+  background: #152433;
+  color: #d7e8ff;
+}
+
+.banner__title {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.banner__text {
+  margin: 0;
+}
+
+.banner__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+}
+
+.card--error {
+  border-color: #6a2a2a;
 }
 
 .status-value--connected {
@@ -470,4 +497,30 @@ button {
 .button--compact {
   width: auto;
   padding: 0.55rem 0.85rem;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 0.5rem;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
 }

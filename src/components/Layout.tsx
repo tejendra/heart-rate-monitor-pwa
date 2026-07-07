@@ -10,12 +10,16 @@ const navItems = [
 export function Layout() {
   return (
     <div className="app">
+      <a href="#main-content" className="skip-link">
+        Skip to main content
+      </a>
+
       <header className="app-header">
         <h1 className="app-title">Heart Rate Monitor</h1>
         <p className="app-subtitle">Bluetooth workout tracker</p>
       </header>
 
-      <main className="app-main">
+      <main id="main-content" className="app-main" tabIndex={-1}>
         <Outlet />
       </main>
 

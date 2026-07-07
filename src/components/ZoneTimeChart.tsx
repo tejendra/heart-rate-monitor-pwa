@@ -35,10 +35,19 @@ export function ZoneTimeChart({ report }: { report: WorkoutReport }) {
     }),
   );
 
+  const chartSummary = data
+    .map((entry) => `${entry.label}: ${formatZoneTime(entry.seconds)}`)
+    .join(', ');
+
   return (
     <div className="chart-card">
-      <h3>Time in zones</h3>
-      <div className="chart-container chart-container--bar">
+      <h3 id="zone-time-chart-title">Time in zones</h3>
+      <div
+        className="chart-container chart-container--bar"
+        role="img"
+        aria-labelledby="zone-time-chart-title"
+        aria-label={`Zone time breakdown. ${chartSummary}`}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ left: 8, right: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#2d3742" />

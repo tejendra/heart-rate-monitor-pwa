@@ -9,6 +9,7 @@ import {
   getUserSettings,
   saveUserSettings,
 } from '../storage/workoutStore';
+import { ErrorState, LoadingState } from '../components/PageState';
 import {
   DEFAULT_USER_SETTINGS,
   type HeartRateZone,
@@ -38,12 +39,20 @@ export function SettingsPage() {
   const [form, setForm] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [savedMessage, setSavedMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
-    void getUserSettings().then((settings) => {
-      setForm(settings);
-      setLoading(false);
-    });
+    void getUserSettings()
+      .then((settings) => {
+        setForm(settings);
+      })
+      .catch(() => {
+        setLoadError('Unable to load settings from this device.');
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const zoneConfig = useMemo(() => buildZoneConfig(form), [form]);
@@ -71,8 +80,14 @@ export function SettingsPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await saveUserSettings(form);
-    setSavedMessage('Settings saved.');
+    setError(null);
+
+    try {
+      await saveUserSettings(form);
+      setSavedMessage('Settings saved.');
+    } catch {
+      setError('Unable to save settings. Please try again.');
+    }
   }
 
   async function handleClearAllData() {
@@ -90,18 +105,28 @@ export function SettingsPage() {
 
   if (loading) {
     return (
-      <section className="page">
-        <h2>Settings</h2>
-        <div className="card">
-          <p className="empty-state">Loading settings...</p>
-        </div>
+      <section className="page" aria-labelledby="settings-title">
+        <h2 id="settings-title">Settings</h2>
+        <LoadingState message="Loading settings..." />
+      </section>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <section className="page" aria-labelledby="settings-title">
+        <h2 id="settings-title">Settings</h2>
+        <ErrorState
+          message={loadError}
+          onRetry={() => window.location.reload()}
+        />
       </section>
     );
   }
 
   return (
-    <section className="page">
-      <h2>Settings</h2>
+    <section className="page" aria-labelledby="settings-title">
+      <h2 id="settings-title">Settings</h2>
       <p className="page-description">
         Personalize Karvonen heart rate zones and calorie estimates.
       </p>
@@ -224,7 +249,16 @@ export function SettingsPage() {
         <button type="submit" className="button button--primary">
           Save Settings
         </button>
-        {savedMessage && <p className="hint hint--success">{savedMessage}</p>}
+        {savedMessage && (
+          <p className="hint hint--success" role="status">
+            {savedMessage}
+          </p>
+        )}
+        {error && (
+          <p className="hint hint--error" role="alert">
+            {error}
+          </p>
+        )}
       </form>
 
       <div className="card">

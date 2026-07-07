@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '../components/PageState';
 import { deleteWorkout, getAllWorkouts } from '../storage/workoutStore';
 import { formatElapsed } from '../workout/sessionManager';
 import type { WorkoutReport } from '../types';
@@ -14,12 +19,21 @@ function formatWorkoutDate(startedAt: string): string {
 export function HistoryPage() {
   const [workouts, setWorkouts] = useState<WorkoutReport[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadWorkouts = useCallback(async () => {
     setLoading(true);
-    const savedWorkouts = await getAllWorkouts();
-    setWorkouts(savedWorkouts);
-    setLoading(false);
+    setError(null);
+
+    try {
+      const savedWorkouts = await getAllWorkouts();
+      setWorkouts(savedWorkouts);
+    } catch {
+      setError('Unable to load saved workouts from this device.');
+      setWorkouts([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -32,34 +46,39 @@ export function HistoryPage() {
       return;
     }
 
-    await deleteWorkout(id);
-    await loadWorkouts();
+    try {
+      await deleteWorkout(id);
+      await loadWorkouts();
+    } catch {
+      setError('Unable to delete this workout.');
+    }
   }
 
   return (
-    <section className="page">
-      <h2>History</h2>
+    <section className="page" aria-labelledby="history-title">
+      <h2 id="history-title">History</h2>
       <p className="page-description">
         Saved workouts are stored on this device using IndexedDB.
       </p>
 
       {loading ? (
-        <div className="card">
-          <p className="empty-state">Loading workouts...</p>
-        </div>
+        <LoadingState message="Loading workouts..." />
+      ) : error ? (
+        <ErrorState message={error} onRetry={() => void loadWorkouts()} />
       ) : workouts.length === 0 ? (
-        <div className="card">
-          <p className="empty-state">No saved workouts yet.</p>
-          <p className="hint">
-            Workout reports will appear here after you complete and save a
-            session.
-          </p>
-        </div>
+        <EmptyState
+          title="No saved workouts yet."
+          description="Workout reports will appear here after you complete and save a session."
+        />
       ) : (
-        <ul className="history-list">
+        <ul className="history-list" aria-label="Saved workouts">
           {workouts.map((workout) => (
             <li key={workout.id} className="history-item card">
-              <Link to={`/report/${workout.id}`} className="history-item__link">
+              <Link
+                to={`/report/${workout.id}`}
+                className="history-item__link"
+                aria-label={`View workout from ${formatWorkoutDate(workout.startedAt)}`}
+              >
                 <p className="history-item__date">
                   {formatWorkoutDate(workout.startedAt)}
                 </p>
@@ -71,6 +90,7 @@ export function HistoryPage() {
               <button
                 type="button"
                 className="button button--secondary button--compact"
+                aria-label={`Delete workout from ${formatWorkoutDate(workout.startedAt)}`}
                 onClick={() => void handleDelete(workout.id)}
               >
                 Delete

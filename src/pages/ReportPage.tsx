@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+} from '../components/PageState';
 import { ReportSummary } from '../components/ReportSummary';
 import { useWorkoutSession } from '../context/WorkoutContext';
 import { downloadWorkoutReport } from '../export/jsonExporter';
@@ -12,26 +17,38 @@ export function ReportPage() {
   const { lastReport } = useWorkoutSession();
   const [report, setReport] = useState<WorkoutReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadReport() {
       setLoading(true);
+      setError(null);
 
-      if (id) {
-        const saved = await getWorkout(id);
-        if (!cancelled) {
-          setReport(saved ?? null);
+      try {
+        if (id) {
+          const saved = await getWorkout(id);
+          if (!cancelled) {
+            setReport(saved ?? null);
+            if (!saved) {
+              setError('Workout report not found. It may have been deleted.');
+            }
+          }
+        } else if (lastReport) {
+          setReport(lastReport);
+        } else {
+          setReport(null);
         }
-      } else if (lastReport) {
-        setReport(lastReport);
-      } else {
-        setReport(null);
-      }
-
-      if (!cancelled) {
-        setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setReport(null);
+          setError('Unable to load this workout report.');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
@@ -57,16 +74,16 @@ export function ReportPage() {
   }
 
   return (
-    <section className="page">
-      <h2>Workout Report</h2>
+    <section className="page" aria-labelledby="report-title">
+      <h2 id="report-title">Workout Report</h2>
       <p className="page-description">
         Summary stats, zone breakdown, and HRV from your completed workout.
       </p>
 
       {loading ? (
-        <div className="card">
-          <p className="empty-state">Loading report...</p>
-        </div>
+        <LoadingState message="Loading report..." />
+      ) : error ? (
+        <ErrorState message={error} onRetry={() => navigate('/history')} />
       ) : report ? (
         <>
           <ReportSummary report={report} />
@@ -74,6 +91,7 @@ export function ReportPage() {
             <button
               type="button"
               className="button button--primary"
+              aria-label="Export workout report as JSON"
               onClick={() => downloadWorkoutReport(report)}
             >
               Export JSON
@@ -81,6 +99,7 @@ export function ReportPage() {
             <button
               type="button"
               className="button button--secondary"
+              aria-label="Delete workout report"
               onClick={() => void handleDelete()}
             >
               Delete Workout
@@ -88,13 +107,10 @@ export function ReportPage() {
           </div>
         </>
       ) : (
-        <div className="card">
-          <p className="empty-state">No report selected.</p>
-          <p className="hint">
-            Complete a workout to generate duration, average/max heart rate,
-            calories, zone time, and HRV.
-          </p>
-        </div>
+        <EmptyState
+          title="No report selected."
+          description="Complete a workout to generate duration, average/max heart rate, calories, zone time, and HRV."
+        />
       )}
 
       <div className="quick-links">

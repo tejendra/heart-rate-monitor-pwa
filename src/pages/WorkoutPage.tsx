@@ -45,6 +45,8 @@ export function WorkoutPage() {
 
   const latestBpm = status.latestSample?.bpm;
   const contactDetected = status.latestSample?.contactDetected;
+  const disconnectedDuringWorkout =
+    isRecording && !isConnected && Boolean(status.error);
 
   async function handleStart() {
     await startWorkout(status.deviceName);
@@ -65,14 +67,14 @@ export function WorkoutPage() {
   }
 
   return (
-    <section className="page">
-      <h2>Live Workout</h2>
+    <section className="page" aria-labelledby="workout-title">
+      <h2 id="workout-title">Live Workout</h2>
       <p className="page-description">
         Record heart rate samples while you train. Zones use your Karvonen
         settings.
       </p>
 
-      {!isConnected && (
+      {!isConnected && !isRecording && (
         <div className="banner banner--warning" role="status">
           Connect a heart rate monitor on the Home screen before starting a
           workout.
@@ -82,21 +84,39 @@ export function WorkoutPage() {
         </div>
       )}
 
+      {disconnectedDuringWorkout && (
+        <div className="banner banner--warning" role="alert">
+          <p className="banner__title">Heart rate monitor disconnected</p>
+          <p className="banner__text">
+            {status.error} Samples recorded so far are kept until you stop the
+            workout.
+          </p>
+        </div>
+      )}
+
       <div className="card card--centered">
-        <p className="bpm-placeholder">{formatBpm(latestBpm)}</p>
+        <p
+          className="bpm-placeholder"
+          aria-live="polite"
+          aria-label={`Current heart rate ${formatBpm(latestBpm)} beats per minute`}
+        >
+          {formatBpm(latestBpm)}
+        </p>
         <p className="bpm-label">BPM</p>
         {contactDetected === false && (
-          <p className="hint hint--warning">Sensor contact not detected</p>
+          <p className="hint hint--warning" role="status">
+            Sensor contact not detected
+          </p>
         )}
 
         <p className="metric-row">
           <span>Elapsed</span>
-          <strong>{formatElapsed(elapsedMs)}</strong>
+          <strong aria-live="polite">{formatElapsed(elapsedMs)}</strong>
         </p>
 
         <div className="metric-row metric-row--zone">
           <span>Zone</span>
-          <strong className={zoneClassName(currentZone)}>
+          <strong className={zoneClassName(currentZone)} aria-live="polite">
             {formatZone(currentZone)}
           </strong>
         </div>
@@ -105,6 +125,7 @@ export function WorkoutPage() {
           <button
             type="button"
             className="button button--primary"
+            aria-label="Stop workout recording"
             onClick={() => void handleStop()}
           >
             Stop Workout
@@ -113,6 +134,7 @@ export function WorkoutPage() {
           <button
             type="button"
             className="button button--primary"
+            aria-label="Start workout recording"
             onClick={() => void handleStart()}
             disabled={!isConnected || isCompleted}
           >
