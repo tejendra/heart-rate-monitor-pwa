@@ -36,6 +36,12 @@ describe('buildWorkoutReport', () => {
     expect(report.avgHeartRate).toBe(146);
     expect(report.maxHeartRate).toBe(160);
     expect(report.caloriesBurned).toBeGreaterThan(0);
+    expect(report.userSettings).toEqual({
+      ...DEFAULT_USER_SETTINGS,
+      age: 30,
+      weight: 70,
+      weightUnit: 'kg',
+    });
     expect(report.zoneTimeSec[2]).toBeGreaterThan(0);
     expect(report.zoneSeries.length).toBeGreaterThan(0);
     expect(report.samples).toHaveLength(4);

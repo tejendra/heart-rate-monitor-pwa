@@ -1,7 +1,37 @@
-import type { UserSettings, WorkoutReport } from '../types';
+import type { UserSettings, WorkoutReport, ZoneConfig } from '../types';
 import { getDb, getDefaultSettings, SETTINGS_KEY, STORES } from './db';
 
 type StoredUserSettings = UserSettings & { weightKg?: number };
+
+function userSettingsFromZoneConfig(zoneConfig: ZoneConfig): UserSettings {
+  const settings: UserSettings = {
+    maxHeartRate: zoneConfig.maxHeartRate,
+    restingHeartRate: zoneConfig.restingHeartRate,
+    weightUnit: 'kg',
+    zoneMethod: zoneConfig.method,
+    weight: null,
+    age: null,
+  };
+
+  if (zoneConfig.method === 'manual') {
+    settings.manualZoneBounds = [
+      zoneConfig.bounds[1].maxBpm,
+      zoneConfig.bounds[2].maxBpm,
+      zoneConfig.bounds[3].maxBpm,
+      zoneConfig.bounds[4].maxBpm,
+    ];
+  }
+
+  return settings;
+}
+
+export function getReportUserSettings(report: WorkoutReport): UserSettings {
+  if (report.userSettings) {
+    return normalizeUserSettings(report.userSettings);
+  }
+
+  return userSettingsFromZoneConfig(report.zoneConfig);
+}
 
 export function normalizeUserSettings(
   settings: StoredUserSettings,

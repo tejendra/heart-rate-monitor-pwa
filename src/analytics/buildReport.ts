@@ -34,6 +34,7 @@ export function buildWorkoutReport(
       zoneConfig,
     }),
     zoneConfig,
+    userSettings: { ...settings },
     zoneTimeSec: aggregateZoneTime(session.samples, zoneConfig, endedAt),
     zoneSeries: buildZoneSeries(session.samples, zoneConfig),
     hrv: computeHrvFromSamples(session.samples),

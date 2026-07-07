@@ -16,10 +16,16 @@ describe('jsonExporter', () => {
     samples: [{ timestamp: Date.parse('2026-07-06T12:00:00.000Z'), bpm: 130 }],
   };
 
+  const settings = {
+    ...DEFAULT_USER_SETTINGS,
+    weight: 70,
+    age: 30,
+  };
+
   const report = buildWorkoutReport(
     session,
-    buildZoneConfig(DEFAULT_USER_SETTINGS),
-    DEFAULT_USER_SETTINGS,
+    buildZoneConfig(settings),
+    settings,
   );
 
   it('creates export payload matching the schema', () => {

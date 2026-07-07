@@ -16,10 +16,10 @@ export function formatWeight(weight: number, unit: WeightUnit): string {
 }
 
 export function getWeightKg(
-  weight: number | undefined,
+  weight: number | null | undefined,
   unit: WeightUnit,
 ): number | undefined {
-  if (weight === undefined) {
+  if (weight == null) {
     return undefined;
   }
 

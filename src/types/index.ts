@@ -49,6 +49,7 @@ export interface WorkoutReport {
   maxHeartRate: number;
   caloriesBurned: number;
   zoneConfig: ZoneConfig;
+  userSettings?: UserSettings;
   zoneTimeSec: Record<HeartRateZone, number>;
   zoneSeries: ZoneSeriesPoint[];
   hrv: HrvSummary;
@@ -62,9 +63,9 @@ export type WeightUnit = 'kg' | 'lb';
 export interface UserSettings {
   maxHeartRate: number;
   restingHeartRate: number;
-  weight?: number;
+  weight?: number | null;
   weightUnit: WeightUnit;
-  age?: number;
+  age?: number | null;
   zoneMethod: ZoneMethod;
   manualZoneBounds?: [number, number, number, number];
 }
