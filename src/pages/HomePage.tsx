@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { ZONE_LABELS } from '../analytics/zones';
 import { BluetoothUnsupportedBanner } from '../components/BluetoothUnsupportedBanner';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
+import { LongPressStopButton } from '../components/LongPressStopButton';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { WorkoutList } from '../components/WorkoutList';
 import { useHeartRateMonitor } from '../context/HeartRateContext';
 import { useWorkoutSession } from '../context/WorkoutContext';
+import { useWakeLock } from '../hooks/useWakeLock';
 import { getRecentWorkouts } from '../storage/workoutStore';
 import type { HeartRateZone, WorkoutReport } from '../types';
 import { formatElapsed } from '../workout/sessionManager';
@@ -56,6 +58,8 @@ export function HomePage() {
   } = useWorkoutSession();
 
   const [recentWorkouts, setRecentWorkouts] = useState<WorkoutReport[]>([]);
+
+  useWakeLock(isRecording);
 
   const latestBpm = status.latestSample?.bpm;
   const contactDetected = status.latestSample?.contactDetected;
@@ -214,18 +218,11 @@ export function HomePage() {
           </div>
 
           {isRecording ? (
-            <button
-              type="button"
-              className="button button--primary"
-              aria-label="Stop workout recording"
-              onClick={() => void handleStop()}
-            >
-              Stop Workout
-            </button>
+            <LongPressStopButton onStop={() => void handleStop()} />
           ) : (
             <button
               type="button"
-              className="button button--primary"
+              className="button button--start"
               aria-label="Start workout recording"
               onClick={() => void handleStart()}
               disabled={!isConnected}

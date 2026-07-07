@@ -214,6 +214,35 @@ button {
   margin-top: 1.25rem;
 }
 
+.workout-stop-controls {
+  margin-top: 1.25rem;
+}
+
+.workout-stop-controls__hint {
+  margin: 0.65rem 0 0;
+  text-align: center;
+}
+
+.button--stop-hold {
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+}
+
+.button--stop-hold__progress {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  background: rgba(255, 255, 255, 0.22);
+  pointer-events: none;
+}
+
+.button--stop-hold__label {
+  position: relative;
+  z-index: 1;
+}
+
 .status-label,
 .bpm-label,
 .hint,
@@ -282,6 +311,11 @@ button {
 
 .button--primary {
   background: var(--accent);
+  color: #fff;
+}
+
+.button--start {
+  background: #2f8f5a;
   color: #fff;
 }
 
