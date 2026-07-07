@@ -16,12 +16,8 @@ const HRR_FRACTIONS: Array<{ zone: HeartRateZone; min: number; max: number }> =
     { zone: 5, min: 0.9, max: 1.0 },
   ];
 
-export function resolveMaxHeartRate(settings: UserSettings): number {
-  if (settings.age !== undefined) {
-    return 220 - settings.age;
-  }
-
-  return settings.maxHeartRate;
+export function recommendMaxHeartRateFromAge(age: number): number {
+  return Math.round(207 - 0.7 * age);
 }
 
 function buildKarvonenBounds(
@@ -56,7 +52,7 @@ function buildManualBounds(
 }
 
 export function buildZoneConfig(settings: UserSettings): ZoneConfig {
-  const maxHeartRate = resolveMaxHeartRate(settings);
+  const maxHeartRate = settings.maxHeartRate;
   const restingHeartRate = settings.restingHeartRate;
   const hrr = maxHeartRate - restingHeartRate;
 
@@ -110,4 +106,12 @@ export const ZONE_LABELS: Record<HeartRateZone, string> = {
   3: 'Aerobic',
   4: 'Threshold',
   5: 'Max',
+};
+
+export const ZONE_COLORS: Record<HeartRateZone, string> = {
+  1: '#2f5f8f',
+  2: '#2f8f5a',
+  3: '#8f8a2f',
+  4: '#8f5a2f',
+  5: '#c41e3a',
 };

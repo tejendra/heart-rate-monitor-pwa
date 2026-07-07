@@ -1,6 +1,5 @@
 import type { UserSettings, ZoneConfig } from '../types';
 import { getWeightKg } from '../utils/weight';
-import { resolveMaxHeartRate } from './zones';
 
 interface CalorieEstimateInput {
   durationSec: number;
@@ -20,7 +19,7 @@ export function estimateCalories({
   }
 
   const durationMin = durationSec / 60;
-  const maxHeartRate = resolveMaxHeartRate(settings);
+  const maxHeartRate = settings.maxHeartRate;
   const restingHeartRate = zoneConfig.restingHeartRate;
   const weightKg = getWeightKg(settings.weight, settings.weightUnit);
 

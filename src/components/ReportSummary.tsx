@@ -5,7 +5,7 @@ import { ZoneTimeChart } from './ZoneTimeChart';
 import type { WorkoutReport } from '../types';
 
 function formatCalories(calories: number): string {
-  return `${calories} kcal (estimate)`;
+  return `${calories} kcal`;
 }
 
 export function ReportSummary({ report }: { report: WorkoutReport }) {
@@ -36,6 +36,9 @@ export function ReportSummary({ report }: { report: WorkoutReport }) {
         </article>
       </div>
 
+      <ZoneTimeChart report={report} />
+      <HeartRateChart report={report} />
+
       <div className="card">
         <h3>Heart rate variability</h3>
         {hrvAvailable ? (
@@ -59,9 +62,6 @@ export function ReportSummary({ report }: { report: WorkoutReport }) {
           </p>
         )}
       </div>
-
-      <ZoneTimeChart report={report} />
-      <HeartRateChart report={report} />
     </>
   );
 }

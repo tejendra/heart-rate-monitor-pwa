@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildZoneConfig, classifyBpm } from './zones';
+import {
+  buildZoneConfig,
+  classifyBpm,
+  recommendMaxHeartRateFromAge,
+} from './zones';
 import { DEFAULT_USER_SETTINGS } from '../types';
 
 describe('zones', () => {
-  it('builds Karvonen zone bounds from settings', () => {
+  it('recommends max heart rate from age using the Gellish formula', () => {
+    expect(recommendMaxHeartRateFromAge(30)).toBe(186);
+  });
+
+  it('builds Karvonen zone bounds from settings max heart rate', () => {
     const config = buildZoneConfig({
       ...DEFAULT_USER_SETTINGS,
       maxHeartRate: 190,
@@ -11,6 +19,7 @@ describe('zones', () => {
       age: 30,
     });
 
+    expect(config.maxHeartRate).toBe(190);
     expect(config.hrr).toBe(130);
     expect(config.bounds[1]).toEqual({ minBpm: 125, maxBpm: 138 });
     expect(config.bounds[5]).toEqual({ minBpm: 177, maxBpm: 190 });

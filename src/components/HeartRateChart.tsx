@@ -8,16 +8,11 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import type { HeartRateZone, WorkoutReport } from '../types';
+import type { WorkoutReport } from '../types';
 import { buildHeartRateSeries } from '../analytics/stats';
+import { ZONE_COLORS } from '../analytics/zones';
 
-const ZONE_COLORS: Record<HeartRateZone, string> = {
-  1: '#2f5f8f',
-  2: '#2f8f5a',
-  3: '#8f8a2f',
-  4: '#8f5a2f',
-  5: '#c41e3a',
-};
+const ZONES = [1, 2, 3, 4, 5] as const;
 
 function formatTimeLabel(timestamp: string): string {
   return new Date(timestamp).toLocaleTimeString([], {
@@ -44,8 +39,6 @@ export function HeartRateChart({ report }: { report: WorkoutReport }) {
 
   const chartSummary = `Heart rate ranged from ${Math.min(...data.map((point) => point.bpm))} to ${Math.max(...data.map((point) => point.bpm))} beats per minute across ${data.length} points.`;
 
-  const zones = [1, 2, 3, 4, 5] as const;
-
   return (
     <div className="chart-card">
       <h3 id="heart-rate-chart-title">Heart rate over time</h3>
@@ -57,7 +50,7 @@ export function HeartRateChart({ report }: { report: WorkoutReport }) {
       >
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            {zones.map((zone) => {
+            {ZONES.map((zone) => {
               const bounds = report.zoneConfig.bounds[zone];
               return (
                 <ReferenceArea
@@ -65,7 +58,7 @@ export function HeartRateChart({ report }: { report: WorkoutReport }) {
                   y1={bounds.minBpm}
                   y2={bounds.maxBpm}
                   fill={ZONE_COLORS[zone]}
-                  fillOpacity={0.12}
+                  fillOpacity={0.38}
                   strokeOpacity={0}
                 />
               );

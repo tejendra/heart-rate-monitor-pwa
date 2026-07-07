@@ -1,8 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom';
 
 const navItems = [
-  { to: '/', label: 'Home', end: true },
-  { to: '/workout', label: 'Workout' },
+  { to: '/', label: 'Workout', end: true },
   { to: '/history', label: 'History' },
   { to: '/settings', label: 'Settings' },
 ];
@@ -15,8 +14,7 @@ export function Layout() {
       </a>
 
       <header className="app-header">
-        <h1 className="app-title">Heart Rate Monitor</h1>
-        <p className="app-subtitle">Bluetooth workout tracker</p>
+        <h1 className="app-title">Heart Rate Workout Tracker</h1>
       </header>
 
       <main id="main-content" className="app-main" tabIndex={-1}>

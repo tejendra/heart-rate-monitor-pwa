@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   buildZoneConfig,
-  resolveMaxHeartRate,
+  recommendMaxHeartRateFromAge,
   ZONE_LABELS,
 } from '../analytics/zones';
 import {
@@ -10,6 +10,7 @@ import {
   saveUserSettings,
 } from '../storage/workoutStore';
 import { ErrorState, LoadingState } from '../components/PageState';
+import { FieldTooltip } from '../components/FieldTooltip';
 import {
   DEFAULT_USER_SETTINGS,
   type HeartRateZone,
@@ -19,6 +20,7 @@ import {
 import { fromKg, toKg } from '../utils/weight';
 
 const ZONES: HeartRateZone[] = [1, 2, 3, 4, 5];
+const SAVE_DEBOUNCE_MS = 400;
 
 function parseOptionalNumber(value: string): number | undefined {
   if (value.trim() === '') {
@@ -35,17 +37,30 @@ function getWeightInputBounds(unit: WeightUnit) {
     : { min: 30, max: 250, step: 0.1, label: 'Weight (kg, optional)' };
 }
 
+function canSaveSettings(settings: UserSettings): boolean {
+  return (
+    Number.isFinite(settings.restingHeartRate) &&
+    settings.restingHeartRate >= 30 &&
+    settings.restingHeartRate <= 120 &&
+    Number.isFinite(settings.maxHeartRate) &&
+    settings.maxHeartRate >= 100 &&
+    settings.maxHeartRate <= 220
+  );
+}
+
 export function SettingsPage() {
   const [form, setForm] = useState<UserSettings>(DEFAULT_USER_SETTINGS);
   const [loading, setLoading] = useState(true);
-  const [savedMessage, setSavedMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
+  const skipNextSave = useRef(true);
 
   useEffect(() => {
     void getUserSettings()
       .then((settings) => {
         setForm(settings);
+        setIsHydrated(true);
       })
       .catch(() => {
         setLoadError('Unable to load settings from this device.');
@@ -55,8 +70,38 @@ export function SettingsPage() {
       });
   }, []);
 
+  useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    if (skipNextSave.current) {
+      skipNextSave.current = false;
+      return;
+    }
+
+    if (!canSaveSettings(form)) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void saveUserSettings(form)
+        .then(() => {
+          setError(null);
+        })
+        .catch(() => {
+          setError('Unable to save settings. Please try again.');
+        });
+    }, SAVE_DEBOUNCE_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [form, isHydrated]);
+
   const zoneConfig = useMemo(() => buildZoneConfig(form), [form]);
-  const effectiveMaxHeartRate = resolveMaxHeartRate(form);
+  const recommendedMaxHeartRate =
+    form.age !== undefined ? recommendMaxHeartRateFromAge(form.age) : null;
   const weightBounds = getWeightInputBounds(form.weightUnit);
 
   function handleWeightUnitChange(nextUnit: WeightUnit) {
@@ -78,18 +123,6 @@ export function SettingsPage() {
     });
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    try {
-      await saveUserSettings(form);
-      setSavedMessage('Settings saved.');
-    } catch {
-      setError('Unable to save settings. Please try again.');
-    }
-  }
-
   async function handleClearAllData() {
     const shouldClear = window.confirm(
       'Delete all saved workouts and reset settings on this device?',
@@ -99,14 +132,14 @@ export function SettingsPage() {
     }
 
     await clearAllData();
+    skipNextSave.current = true;
     setForm(DEFAULT_USER_SETTINGS);
-    setSavedMessage('All local data cleared.');
+    setError(null);
   }
 
   if (loading) {
     return (
-      <section className="page" aria-labelledby="settings-title">
-        <h2 id="settings-title">Settings</h2>
+      <section className="page" aria-label="Settings">
         <LoadingState message="Loading settings..." />
       </section>
     );
@@ -114,8 +147,7 @@ export function SettingsPage() {
 
   if (loadError) {
     return (
-      <section className="page" aria-labelledby="settings-title">
-        <h2 id="settings-title">Settings</h2>
+      <section className="page" aria-label="Settings">
         <ErrorState
           message={loadError}
           onRetry={() => window.location.reload()}
@@ -125,15 +157,22 @@ export function SettingsPage() {
   }
 
   return (
-    <section className="page" aria-labelledby="settings-title">
-      <h2 id="settings-title">Settings</h2>
+    <section className="page" aria-label="Settings">
       <p className="page-description">
         Personalize Karvonen heart rate zones and calorie estimates.
       </p>
 
-      <form className="card form" onSubmit={(event) => void handleSubmit(event)}>
+      <div className="card form">
         <label className="form-field">
-          <span>Resting heart rate (bpm)</span>
+          <span className="form-field__label">
+            Resting heart rate (bpm)
+            <FieldTooltip label="How to measure resting heart rate">
+              Connect your monitor, start a workout, and sit quietly for 5
+              minutes. Stop the session and use the average heart rate from the
+              report. Repeat on several mornings and enter your typical
+              reading.
+            </FieldTooltip>
+          </span>
           <input
             type="number"
             min={30}
@@ -150,7 +189,12 @@ export function SettingsPage() {
         </label>
 
         <label className="form-field">
-          <span>Age (optional)</span>
+          <span className="form-field__label">
+            Age (optional)
+            <FieldTooltip label="What age is used for">
+              Shows a Gellish max heart rate recommendation below and enables a more accurate calorie estimate on workout reports.
+            </FieldTooltip>
+          </span>
           <input
             type="number"
             min={10}
@@ -166,7 +210,14 @@ export function SettingsPage() {
         </label>
 
         <label className="form-field">
-          <span>Max heart rate override (bpm)</span>
+          <span className="form-field__label">
+            Max heart rate (bpm)
+            <FieldTooltip label="How max heart rate is used">
+              Used for Karvonen zones and calorie estimates. The Gellish formula
+              (207 − 0.7 × age) is a common age-based estimate—update this field
+              to that value if you want to use it.
+            </FieldTooltip>
+          </span>
           <input
             type="number"
             min={100}
@@ -179,14 +230,33 @@ export function SettingsPage() {
               }))
             }
           />
-          <span className="hint">
-            Used when age is not set. Effective max HR: {effectiveMaxHeartRate}{' '}
-            bpm
-          </span>
+          {recommendedMaxHeartRate !== null && (
+            <span className="hint">
+              Recommended for your age (Gellish): {recommendedMaxHeartRate} bpm
+            </span>
+          )}
         </label>
 
         <div className="form-field">
-          <span>{weightBounds.label}</span>
+          <span className="form-field__label">
+            {weightBounds.label}
+            <FieldTooltip label="What weight is used for">
+              Calories on workout reports are estimated from your
+              session duration and average heart rate:
+              <br />
+              <br />
+              <strong>Weight + age:</strong> Keytel formula using heart rate,
+              weight, age, and time.
+              <br />
+              <br />
+              <strong>Weight only:</strong> MET estimate from workout intensity,
+              scaled by your weight.
+              <br />
+              <br />
+              <strong>Neither set:</strong> same MET method, assuming 70 kg or
+              154 lbs.
+            </FieldTooltip>
+          </span>
           <div className="unit-toggle" role="group" aria-label="Weight unit">
             <button
               type="button"
@@ -246,20 +316,12 @@ export function SettingsPage() {
           </div>
         </div>
 
-        <button type="submit" className="button button--primary">
-          Save Settings
-        </button>
-        {savedMessage && (
-          <p className="hint hint--success" role="status">
-            {savedMessage}
-          </p>
-        )}
         {error && (
           <p className="hint hint--error" role="alert">
             {error}
           </p>
         )}
-      </form>
+      </div>
 
       <div className="card">
         <h3>Data</h3>

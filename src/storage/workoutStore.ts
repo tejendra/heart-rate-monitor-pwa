@@ -36,6 +36,11 @@ export async function getAllWorkouts(): Promise<WorkoutReport[]> {
   return workouts.reverse();
 }
 
+export async function getRecentWorkouts(limit: number): Promise<WorkoutReport[]> {
+  const workouts = await getAllWorkouts();
+  return workouts.slice(0, limit);
+}
+
 export async function deleteWorkout(id: string): Promise<void> {
   const db = await getDb();
   await db.delete(STORES.workouts, id);

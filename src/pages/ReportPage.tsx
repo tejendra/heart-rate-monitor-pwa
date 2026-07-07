@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   EmptyState,
   ErrorState,
   LoadingState,
 } from '../components/PageState';
 import { ReportSummary } from '../components/ReportSummary';
+import { formatWorkoutDate } from '../components/WorkoutList';
 import { useWorkoutSession } from '../context/WorkoutContext';
 import { downloadWorkoutReport } from '../export/jsonExporter';
 import { deleteWorkout, getWorkout } from '../storage/workoutStore';
@@ -75,7 +76,9 @@ export function ReportPage() {
 
   return (
     <section className="page" aria-labelledby="report-title">
-      <h2 id="report-title">Workout Report</h2>
+      <h2 id="report-title">
+        {report ? formatWorkoutDate(report.startedAt) : 'Workout Report'}
+      </h2>
       <p className="page-description">
         Summary stats, zone breakdown, and HRV from your completed workout.
       </p>
@@ -90,7 +93,7 @@ export function ReportPage() {
           <div className="quick-links">
             <button
               type="button"
-              className="button button--primary"
+              className="button button--secondary"
               aria-label="Export workout report as JSON"
               onClick={() => downloadWorkoutReport(report)}
             >
@@ -98,7 +101,7 @@ export function ReportPage() {
             </button>
             <button
               type="button"
-              className="button button--secondary"
+              className="button button--primary"
               aria-label="Delete workout report"
               onClick={() => void handleDelete()}
             >
@@ -112,15 +115,6 @@ export function ReportPage() {
           description="Complete a workout to generate duration, average/max heart rate, calories, zone time, and HRV."
         />
       )}
-
-      <div className="quick-links">
-        <Link to="/workout" className="button button--secondary">
-          New Workout
-        </Link>
-        <Link to="/history" className="button button--secondary">
-          View History
-        </Link>
-      </div>
     </section>
   );
 }
