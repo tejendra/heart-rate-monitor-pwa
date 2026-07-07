@@ -8,7 +8,8 @@ describe('estimateCalories', () => {
     const settings = {
       ...DEFAULT_USER_SETTINGS,
       age: 30,
-      weightKg: 70,
+      weight: 70,
+      weightUnit: 'kg' as const,
     };
     const zoneConfig = buildZoneConfig(settings);
 

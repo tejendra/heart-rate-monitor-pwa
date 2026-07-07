@@ -1,75 +1,60 @@
-import { Link } from 'react-router-dom';
-import { isHrvAvailable } from '../analytics/hrv';
-import { formatElapsed } from '../workout/sessionManager';
-import { HeartRateChart } from '../components/HeartRateChart';
-import { ZoneTimeChart } from '../components/ZoneTimeChart';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { ReportSummary } from '../components/ReportSummary';
 import { useWorkoutSession } from '../context/WorkoutContext';
+import { downloadWorkoutReport } from '../export/jsonExporter';
+import { deleteWorkout, getWorkout } from '../storage/workoutStore';
 import type { WorkoutReport } from '../types';
 
-function formatCalories(calories: number): string {
-  return `${calories} kcal (estimate)`;
-}
-
-function ReportSummary({ report }: { report: WorkoutReport }) {
-  const hrvAvailable = isHrvAvailable(report.hrv);
-
-  return (
-    <>
-      <div className="summary-grid">
-        <article className="summary-card">
-          <p className="summary-card__label">Exercise time</p>
-          <p className="summary-card__value">
-            {formatElapsed(report.durationSec * 1000)}
-          </p>
-        </article>
-        <article className="summary-card">
-          <p className="summary-card__label">Avg heart rate</p>
-          <p className="summary-card__value">{report.avgHeartRate} bpm</p>
-        </article>
-        <article className="summary-card">
-          <p className="summary-card__label">Max heart rate</p>
-          <p className="summary-card__value">{report.maxHeartRate} bpm</p>
-        </article>
-        <article className="summary-card">
-          <p className="summary-card__label">Calories burned</p>
-          <p className="summary-card__value">
-            {formatCalories(report.caloriesBurned)}
-          </p>
-        </article>
-      </div>
-
-      <div className="card">
-        <h3>Heart rate variability</h3>
-        {hrvAvailable ? (
-          <dl className="settings-list">
-            <div className="settings-row">
-              <dt>RMSSD</dt>
-              <dd>{report.hrv.rmssd} ms</dd>
-            </div>
-            <div className="settings-row">
-              <dt>SDNN</dt>
-              <dd>{report.hrv.sdnn} ms</dd>
-            </div>
-            <div className="settings-row">
-              <dt>RR intervals used</dt>
-              <dd>{report.hrv.sampleCount}</dd>
-            </div>
-          </dl>
-        ) : (
-          <p className="hint">
-            HRV unavailable — device did not provide RR data.
-          </p>
-        )}
-      </div>
-
-      <ZoneTimeChart report={report} />
-      <HeartRateChart report={report} />
-    </>
-  );
-}
-
 export function ReportPage() {
+  const navigate = useNavigate();
+  const { id } = useParams();
   const { lastReport } = useWorkoutSession();
+  const [report, setReport] = useState<WorkoutReport | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadReport() {
+      setLoading(true);
+
+      if (id) {
+        const saved = await getWorkout(id);
+        if (!cancelled) {
+          setReport(saved ?? null);
+        }
+      } else if (lastReport) {
+        setReport(lastReport);
+      } else {
+        setReport(null);
+      }
+
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }
+
+    void loadReport();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, lastReport]);
+
+  async function handleDelete() {
+    if (!report) {
+      return;
+    }
+
+    const shouldDelete = window.confirm('Delete this workout report?');
+    if (!shouldDelete) {
+      return;
+    }
+
+    await deleteWorkout(report.id);
+    navigate('/history');
+  }
 
   return (
     <section className="page">
@@ -78,8 +63,30 @@ export function ReportPage() {
         Summary stats, zone breakdown, and HRV from your completed workout.
       </p>
 
-      {lastReport ? (
-        <ReportSummary report={lastReport} />
+      {loading ? (
+        <div className="card">
+          <p className="empty-state">Loading report...</p>
+        </div>
+      ) : report ? (
+        <>
+          <ReportSummary report={report} />
+          <div className="quick-links">
+            <button
+              type="button"
+              className="button button--primary"
+              onClick={() => downloadWorkoutReport(report)}
+            >
+              Export JSON
+            </button>
+            <button
+              type="button"
+              className="button button--secondary"
+              onClick={() => void handleDelete()}
+            >
+              Delete Workout
+            </button>
+          </div>
+        </>
       ) : (
         <div className="card">
           <p className="empty-state">No report selected.</p>

@@ -27,7 +27,8 @@ describe('buildWorkoutReport', () => {
     const report = buildWorkoutReport(session, zoneConfig, {
       ...DEFAULT_USER_SETTINGS,
       age: 30,
-      weightKg: 70,
+      weight: 70,
+      weightUnit: 'kg',
     });
 
     expect(report.id).toBe('workout-1');

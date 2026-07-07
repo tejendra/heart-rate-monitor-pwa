@@ -414,11 +414,11 @@ heart-rate-monitor-pwa/
 
 ### Phase 5 — Persistence & Export (Days 6–7)
 
-- [ ] Save `WorkoutReport` to IndexedDB on workout completion
-- [ ] History list and report detail views
-- [ ] Delete workout
-- [ ] JSON export download
-- [ ] Settings persisted (age, weight, resting HR, max HR)
+- [x] Save `WorkoutReport` to IndexedDB on workout completion
+- [x] History list and report detail views
+- [x] Delete workout
+- [x] JSON export download
+- [x] Settings persisted (age, weight, resting HR, max HR)
 
 **Exit criteria:** Workouts survive page reload; export produces valid JSON matching schema.
 

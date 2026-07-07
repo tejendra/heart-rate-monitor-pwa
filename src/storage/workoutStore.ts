@@ -1,6 +1,25 @@
 import type { UserSettings, WorkoutReport } from '../types';
 import { getDb, getDefaultSettings, SETTINGS_KEY, STORES } from './db';
 
+type StoredUserSettings = UserSettings & { weightKg?: number };
+
+export function normalizeUserSettings(
+  settings: StoredUserSettings,
+): UserSettings {
+  const weightUnit = settings.weightUnit ?? 'kg';
+  const weight = settings.weight ?? settings.weightKg;
+
+  return {
+    maxHeartRate: settings.maxHeartRate,
+    restingHeartRate: settings.restingHeartRate,
+    weight,
+    weightUnit,
+    age: settings.age,
+    zoneMethod: settings.zoneMethod,
+    manualZoneBounds: settings.manualZoneBounds,
+  };
+}
+
 export async function saveWorkout(report: WorkoutReport): Promise<void> {
   const db = await getDb();
   await db.put(STORES.workouts, report);
@@ -30,7 +49,7 @@ export async function clearAllWorkouts(): Promise<void> {
 export async function getUserSettings(): Promise<UserSettings> {
   const db = await getDb();
   const settings = await db.get(STORES.settings, SETTINGS_KEY);
-  return settings ?? getDefaultSettings();
+  return settings ? normalizeUserSettings(settings) : getDefaultSettings();
 }
 
 export async function saveUserSettings(settings: UserSettings): Promise<void> {

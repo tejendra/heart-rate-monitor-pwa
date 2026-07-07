@@ -10,7 +10,7 @@ import {
 import { buildWorkoutReport } from '../analytics/buildReport';
 import { buildZoneConfig } from '../analytics/zones';
 import { heartRateService } from '../ble/heartRateService';
-import { getUserSettings } from '../storage/workoutStore';
+import { getUserSettings, saveWorkout } from '../storage/workoutStore';
 import type { WorkoutReport, WorkoutSession } from '../types';
 import {
   workoutSessionManager,
@@ -65,6 +65,7 @@ export function WorkoutProvider({ children }: { children: ReactNode }) {
     const session = workoutSessionManager.stop();
     const settings = await getUserSettings();
     const report = buildWorkoutReport(session, zoneConfig, settings);
+    await saveWorkout(report);
     setLastReport(report);
 
     return { session, report };

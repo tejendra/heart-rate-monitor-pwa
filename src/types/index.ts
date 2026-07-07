@@ -57,11 +57,13 @@ export interface WorkoutReport {
 }
 
 export type ZoneMethod = 'karvonen' | 'manual';
+export type WeightUnit = 'kg' | 'lb';
 
 export interface UserSettings {
   maxHeartRate: number;
   restingHeartRate: number;
-  weightKg?: number;
+  weight?: number;
+  weightUnit: WeightUnit;
   age?: number;
   zoneMethod: ZoneMethod;
   manualZoneBounds?: [number, number, number, number];
@@ -78,5 +80,6 @@ export const APP_VERSION = '1.0.0' as const;
 export const DEFAULT_USER_SETTINGS: UserSettings = {
   maxHeartRate: 190,
   restingHeartRate: 60,
+  weightUnit: 'kg',
   zoneMethod: 'karvonen',
 };

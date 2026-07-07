@@ -1,4 +1,5 @@
 import type { UserSettings, ZoneConfig } from '../types';
+import { getWeightKg } from '../utils/weight';
 import { resolveMaxHeartRate } from './zones';
 
 interface CalorieEstimateInput {
@@ -21,17 +22,16 @@ export function estimateCalories({
   const durationMin = durationSec / 60;
   const maxHeartRate = resolveMaxHeartRate(settings);
   const restingHeartRate = zoneConfig.restingHeartRate;
+  const weightKg = getWeightKg(settings.weight, settings.weightUnit);
 
-  if (settings.weightKg !== undefined && settings.age !== undefined) {
+  if (weightKg !== undefined && settings.age !== undefined) {
     const kilojoules =
       durationMin *
-      (0.6309 * avgHeartRate +
-        0.1988 * settings.weightKg +
-        0.2017 * settings.age);
+      (0.6309 * avgHeartRate + 0.1988 * weightKg + 0.2017 * settings.age);
     return Math.round(kilojoules / 4.184);
   }
 
-  const weightKg = settings.weightKg ?? 70;
+  const fallbackWeightKg = weightKg ?? 70;
   const reserve = Math.max(maxHeartRate - restingHeartRate, 1);
   const intensity = Math.min(
     Math.max((avgHeartRate - restingHeartRate) / reserve, 0),
@@ -40,5 +40,5 @@ export function estimateCalories({
   const met = 1 + intensity * 8;
   const hours = durationSec / 3600;
 
-  return Math.round(met * weightKg * hours);
+  return Math.round(met * fallbackWeightKg * hours);
 }
