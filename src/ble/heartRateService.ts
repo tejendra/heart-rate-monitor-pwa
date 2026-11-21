@@ -1,8 +1,11 @@
 import type { HeartRateSample } from '../types';
 import {
+  BATTERY_LEVEL_UUID,
+  BATTERY_SERVICE_UUID,
   HEART_RATE_MEASUREMENT_UUID,
   HEART_RATE_SERVICE_UUID,
 } from './constants';
+import { parseBatteryLevel } from './parseBatteryLevel';
 import { toHeartRateSample } from './parseHeartRateMeasurement';
 
 export type HeartRateConnectionState =
@@ -16,6 +19,7 @@ export interface HeartRateConnectionStatus {
   deviceName?: string;
   error?: string;
   latestSample?: HeartRateSample;
+  batteryLevelPercent?: number;
 }
 
 type StatusListener = (status: HeartRateConnectionStatus) => void;
@@ -24,10 +28,13 @@ type SampleListener = (sample: HeartRateSample) => void;
 export class HeartRateService {
   private device: BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
+  private batteryCharacteristic: BluetoothRemoteGATTCharacteristic | null =
+    null;
   private status: HeartRateConnectionStatus = { state: 'disconnected' };
   private listeners = new Set<StatusListener>();
   private sampleListeners = new Set<SampleListener>();
   private onCharacteristicValue: ((event: Event) => void) | null = null;
+  private onBatteryValue: ((event: Event) => void) | null = null;
   private onDeviceDisconnect: ((event: Event) => void) | null = null;
 
   subscribe(listener: StatusListener): () => void {
@@ -54,12 +61,17 @@ export class HeartRateService {
       return;
     }
 
-    this.updateStatus({ state: 'connecting', error: undefined });
+    this.updateStatus({
+      state: 'connecting',
+      error: undefined,
+      batteryLevelPercent: undefined,
+      latestSample: undefined,
+    });
 
     try {
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [HEART_RATE_SERVICE_UUID] }],
-        optionalServices: [HEART_RATE_SERVICE_UUID],
+        optionalServices: [HEART_RATE_SERVICE_UUID, BATTERY_SERVICE_UUID],
       });
 
       this.attachDevice(device);
@@ -107,6 +119,8 @@ export class HeartRateService {
       );
       await characteristic.startNotifications();
 
+      await this.setupBatteryLevel(server);
+
       this.updateStatus({
         state: 'connected',
         deviceName: device.name ?? 'Heart rate monitor',
@@ -122,6 +136,7 @@ export class HeartRateService {
         state: isCancelled ? 'disconnected' : 'error',
         deviceName: undefined,
         latestSample: undefined,
+        batteryLevelPercent: undefined,
         error: isCancelled ? undefined : message,
       });
 
@@ -143,6 +158,7 @@ export class HeartRateService {
       state: 'disconnected',
       deviceName: undefined,
       latestSample: undefined,
+      batteryLevelPercent: undefined,
       error: undefined,
     });
   }
@@ -155,6 +171,7 @@ export class HeartRateService {
         state: 'disconnected',
         deviceName: undefined,
         latestSample: undefined,
+        batteryLevelPercent: undefined,
         error: 'Heart rate monitor disconnected',
       });
     };
@@ -169,6 +186,13 @@ export class HeartRateService {
       );
     }
 
+    if (this.batteryCharacteristic && this.onBatteryValue) {
+      this.batteryCharacteristic.removeEventListener(
+        'characteristicvaluechanged',
+        this.onBatteryValue,
+      );
+    }
+
     if (this.device && this.onDeviceDisconnect) {
       this.device.removeEventListener(
         'gattserverdisconnected',
@@ -177,13 +201,54 @@ export class HeartRateService {
     }
 
     this.characteristic = null;
+    this.batteryCharacteristic = null;
     this.onCharacteristicValue = null;
+    this.onBatteryValue = null;
     this.onDeviceDisconnect = null;
     this.device = null;
   }
 
-  private updateStatus(next: HeartRateConnectionStatus) {
-    this.status = next;
+  private async setupBatteryLevel(server: BluetoothRemoteGATTServer) {
+    try {
+      const service = await server.getPrimaryService(BATTERY_SERVICE_UUID);
+      const characteristic = await service.getCharacteristic(BATTERY_LEVEL_UUID);
+      const value = await characteristic.readValue();
+      this.applyBatteryValue(value);
+
+      this.batteryCharacteristic = characteristic;
+      this.onBatteryValue = (event: Event) => {
+        const target = event.target as BluetoothRemoteGATTCharacteristic;
+        if (!target.value) {
+          return;
+        }
+        this.applyBatteryValue(target.value);
+      };
+
+      characteristic.addEventListener(
+        'characteristicvaluechanged',
+        this.onBatteryValue,
+      );
+
+      try {
+        await characteristic.startNotifications();
+      } catch {
+        // One-shot read is enough when notifications are unavailable.
+      }
+    } catch {
+      // Many heart rate monitors do not expose the Battery Service.
+    }
+  }
+
+  private applyBatteryValue(value: DataView) {
+    const percent = parseBatteryLevel(value);
+    this.updateStatus({ batteryLevelPercent: percent });
+  }
+
+  private updateStatus(patch: Partial<HeartRateConnectionStatus>) {
+    this.status = {
+      ...this.status,
+      ...patch,
+    };
     for (const listener of this.listeners) {
       listener(this.status);
     }
@@ -195,8 +260,6 @@ export class HeartRateService {
     }
   }
 }
-
-export const heartRateService = new HeartRateService();
 
 function formatBluetoothError(error: unknown): string {
   if (error instanceof DOMException) {

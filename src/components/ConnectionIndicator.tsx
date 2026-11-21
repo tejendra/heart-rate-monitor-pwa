@@ -1,5 +1,6 @@
 type ConnectionIndicatorProps = {
   deviceName?: string;
+  batteryLevelPercent?: number;
   onDisconnect: () => void;
 };
 
@@ -21,22 +22,32 @@ function BluetoothIcon() {
 
 export function ConnectionIndicator({
   deviceName,
+  batteryLevelPercent,
   onDisconnect,
 }: ConnectionIndicatorProps) {
   const label = deviceName ?? 'heart rate monitor';
+  const statusLabel =
+    batteryLevelPercent !== undefined
+      ? `Connected to ${label}, battery ${batteryLevelPercent} percent`
+      : `Connected to ${label}`;
 
   return (
     <div
       className="connection-indicator"
       role="status"
       aria-live="polite"
-      aria-label={`Connected to ${label}`}
+      aria-label={statusLabel}
     >
       <span className="connection-indicator__signal" aria-hidden="true">
         <BluetoothIcon />
         <span className="connection-indicator__dot" />
       </span>
       <span className="connection-indicator__name">{label}</span>
+      {batteryLevelPercent !== undefined && (
+        <span className="connection-indicator__battery">
+          {batteryLevelPercent}%
+        </span>
+      )}
       <button
         type="button"
         className="connection-indicator__disconnect"

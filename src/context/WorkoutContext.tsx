@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { buildWorkoutReport } from '../analytics/buildReport';
 import { buildZoneConfig } from '../analytics/zones';
-import { heartRateService } from '../ble/heartRateService';
+import { heartRateService } from '../ble/heartRateClient';
 import { getUserSettings, saveWorkout } from '../storage/workoutStore';
 import type { WorkoutReport, WorkoutSession } from '../types';
 import {

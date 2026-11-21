@@ -1,45 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  isAboveZone5Target,
-  ZONE_LABELS,
-  type ZoneClassification,
-} from '../analytics/zones';
+import { getWorkoutZoneTheme, isAboveZone5Target } from '../analytics/zones';
 import { BluetoothUnsupportedBanner } from '../components/BluetoothUnsupportedBanner';
 import { ConnectionIndicator } from '../components/ConnectionIndicator';
-import { LongPressStopButton } from '../components/LongPressStopButton';
+import { LiveWorkoutMetrics } from '../components/LiveWorkoutMetrics';
 import { PwaInstallPrompt } from '../components/PwaInstallPrompt';
 import { WorkoutList } from '../components/WorkoutList';
+import { WorkoutRecordingFullscreen } from '../components/WorkoutRecordingFullscreen';
 import { useHeartRateMonitor } from '../context/HeartRateContext';
 import { useWorkoutSession } from '../context/WorkoutContext';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { getRecentWorkouts } from '../storage/workoutStore';
 import type { WorkoutReport } from '../types';
-import { formatElapsed } from '../workout/sessionManager';
-
-function formatBpm(bpm?: number) {
-  return bpm !== undefined ? String(bpm) : '--';
-}
-
-function formatZone(zone: ZoneClassification | null) {
-  if (zone === null) {
-    return '--';
-  }
-
-  if (zone === 0) {
-    return 'Zone 0';
-  }
-
-  return `Zone ${zone} · ${ZONE_LABELS[zone]}`;
-}
-
-function zoneClassName(zone: ZoneClassification | null) {
-  if (zone === null) {
-    return '';
-  }
-
-  return `zone-pill zone-pill--${zone}`;
-}
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -66,6 +38,22 @@ export function HomePage() {
 
   useWakeLock(isRecording);
 
+  useEffect(() => {
+    if (!isRecording) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousBackground = document.body.style.background;
+    document.body.style.overflow = 'hidden';
+    document.body.style.background = getWorkoutZoneTheme(currentZone).background;
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.background = previousBackground;
+    };
+  }, [isRecording, currentZone]);
+
   const latestBpm = status.latestSample?.bpm;
   const contactDetected = status.latestSample?.contactDetected;
   const aboveZone5Target =
@@ -75,7 +63,7 @@ export function HomePage() {
   const disconnectedDuringWorkout =
     isRecording && !isConnected && Boolean(status.error);
 
-  const showWorkoutCard = isConnected || isRecording;
+  const showIdleWorkoutCard = isConnected && !isRecording;
 
   useEffect(() => {
     if (isCompleted) {
@@ -120,63 +108,50 @@ export function HomePage() {
     navigate(`/report/${report.id}`);
   }
 
-  function connectionLabel() {
-    switch (status.state) {
-      case 'connecting':
-        return 'Connecting...';
-      case 'connected':
-        return `Connected to ${status.deviceName ?? 'heart rate monitor'}`;
-      case 'error':
-        return 'Connection error';
-      default:
-        return 'Not connected';
-    }
-  }
+  const metricsProps = {
+    latestBpm,
+    contactDetected,
+    elapsedMs,
+    currentZone,
+    aboveZone5Target,
+  };
 
   return (
-    <section className="page" aria-label="Workout">
-      {isConnected && (
+  <>
+      {isRecording && (
+        <WorkoutRecordingFullscreen
+          {...metricsProps}
+          disconnectMessage={
+            disconnectedDuringWorkout
+              ? `${status.error} Samples recorded so far are kept until you stop the workout.`
+              : undefined
+          }
+          onStop={() => void handleStop()}
+        />
+      )}
+
+      <section
+        className={`page${isRecording ? ' page--workout-recording' : ''}`}
+        aria-label="Workout"
+        aria-hidden={isRecording}
+      >
+      {isConnected && !isRecording && (
         <div className="page-toolbar">
           <ConnectionIndicator
             deviceName={status.deviceName}
+            batteryLevelPercent={status.batteryLevelPercent}
             onDisconnect={() => void handleDisconnect()}
           />
         </div>
       )}
-      {!isConnected && (
-        <p className="page-description">
-          Pair a Bluetooth heart rate monitor and record workouts with live BPM
-          and Karvonen heart rate zones.
-        </p>
-      )}
-
       <PwaInstallPrompt />
       <BluetoothUnsupportedBanner />
 
-      {disconnectedDuringWorkout && (
-        <div className="banner banner--warning" role="alert">
-          <p className="banner__title">Heart rate monitor disconnected</p>
-          <p className="banner__text">
-            {status.error} Samples recorded so far are kept until you stop the
-            workout.
-          </p>
-        </div>
-      )}
-
       {!isConnected && (
         <div className="card">
-          <p className="status-label" id="connection-status-label">
-            Connection status
-          </p>
-          <p
-            className={`status-value ${
-              status.state === 'connected' ? 'status-value--connected' : ''
-            }`}
-            role="status"
-            aria-live="polite"
-            aria-labelledby="connection-status-label"
-          >
-            {connectionLabel()}
+          <p className="page-description card__intro">
+            Pair a Bluetooth heart rate monitor and record workouts with live BPM
+            and Karvonen heart rate zones.
           </p>
 
           {status.error && (
@@ -198,57 +173,22 @@ export function HomePage() {
         </div>
       )}
 
-      {showWorkoutCard && (
+      {showIdleWorkoutCard && (
         <div className="card card--centered">
-          <div
-            className="live-bpm-display"
-            aria-live="polite"
-            aria-label={`Current heart rate ${formatBpm(latestBpm)} beats per minute`}
+          <LiveWorkoutMetrics {...metricsProps} showSessionDetails={false} />
+          <button
+            type="button"
+            className="button button--start"
+            aria-label="Start workout recording"
+            onClick={() => void handleStart()}
+            disabled={!isConnected}
           >
-            <p className="bpm-placeholder">{formatBpm(latestBpm)}</p>
-            <p className="bpm-label">BPM</p>
-          </div>
-          {contactDetected === false && (
-            <p className="hint hint--warning" role="status">
-              Sensor contact not detected. Adjust your strap.
-            </p>
-          )}
-
-          <p className="metric-row">
-            <span>Elapsed</span>
-            <strong aria-live="polite">{formatElapsed(elapsedMs)}</strong>
-          </p>
-
-          <div className="metric-row metric-row--zone">
-            <span>Zone</span>
-            <strong className={zoneClassName(currentZone)} aria-live="polite">
-              {formatZone(currentZone)}
-            </strong>
-          </div>
-
-          {aboveZone5Target && (
-            <p className="hint hint--warning" role="status">
-              Heart rate is above your zone 5 target — consider slowing down.
-            </p>
-          )}
-
-          {isRecording ? (
-            <LongPressStopButton onStop={() => void handleStop()} />
-          ) : (
-            <button
-              type="button"
-              className="button button--start"
-              aria-label="Start workout recording"
-              onClick={() => void handleStart()}
-              disabled={!isConnected}
-            >
-              Start Workout
-            </button>
-          )}
+            Start Workout
+          </button>
         </div>
       )}
 
-      {recentWorkouts.length > 0 && (
+      {!isRecording && recentWorkouts.length > 0 && (
         <section aria-labelledby="recent-workouts-title">
           <h3 id="recent-workouts-title" className="section-title">
             Recent workouts
@@ -257,5 +197,6 @@ export function HomePage() {
         </section>
       )}
     </section>
+  </>
   );
 }

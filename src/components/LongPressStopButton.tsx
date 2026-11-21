@@ -60,7 +60,7 @@ export function LongPressStopButton({ onStop }: LongPressStopButtonProps) {
       <button
         type="button"
         className="button button--primary button--stop-hold"
-        aria-label="Hold for 5 seconds to stop workout recording"
+        aria-label="Long hold for 5 seconds to stop workout recording"
         onPointerDown={(event) => {
           event.preventDefault();
           startHold();
@@ -77,11 +77,8 @@ export function LongPressStopButton({ onStop }: LongPressStopButtonProps) {
           style={{ transform: `scaleX(${progress})` }}
           aria-hidden="true"
         />
-        <span className="button--stop-hold__label">Hold to Stop</span>
+        <span className="button--stop-hold__label">Long hold to Stop</span>
       </button>
-      <p className="hint workout-stop-controls__hint">
-        Press and hold for 5 seconds to stop.
-      </p>
     </div>
   );
 }

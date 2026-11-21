@@ -4,6 +4,10 @@ import type {
   ZoneBound,
   ZoneConfig,
 } from '../types';
+import {
+  getWorkoutZoneForeground,
+  type WorkoutZoneForeground,
+} from '../utils/colorContrast';
 
 export type ZoneClassification = 0 | HeartRateZone;
 
@@ -122,3 +126,32 @@ export const ZONE_COLORS: Record<HeartRateZone, string> = {
   4: '#8f5a2f',
   5: '#c41e3a',
 };
+
+const ZONE_0_COLOR = '#3a4250';
+const WORKOUT_IDLE_COLOR = '#0f1419';
+
+export function getZoneBackgroundColor(
+  zone: ZoneClassification | null,
+): string {
+  if (zone === null) {
+    return WORKOUT_IDLE_COLOR;
+  }
+  if (zone === 0) {
+    return ZONE_0_COLOR;
+  }
+  return ZONE_COLORS[zone];
+}
+
+export interface WorkoutZoneTheme extends WorkoutZoneForeground {
+  background: string;
+}
+
+export function getWorkoutZoneTheme(
+  zone: ZoneClassification | null,
+): WorkoutZoneTheme {
+  const background = getZoneBackgroundColor(zone);
+  return {
+    background,
+    ...getWorkoutZoneForeground(background),
+  };
+}

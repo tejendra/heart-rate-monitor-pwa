@@ -7,10 +7,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import {
-  heartRateService,
-  type HeartRateConnectionStatus,
-} from '../ble/heartRateService';
+import { heartRateService } from '../ble/heartRateClient';
+import type { HeartRateConnectionStatus } from '../ble/heartRateService';
+import { isMockHeartRateEnabled } from '../ble/mockHeartRate';
 import {
   getBluetoothAvailability,
   getBluetoothSupportStatus,
@@ -30,7 +29,17 @@ interface HeartRateContextValue {
 const HeartRateContext = createContext<HeartRateContextValue | null>(null);
 
 export function HeartRateProvider({ children }: { children: ReactNode }) {
-  const [support] = useState(() => getBluetoothSupportStatus());
+  const [support] = useState((): BluetoothSupportStatus => {
+    if (isMockHeartRateEnabled()) {
+      return {
+        supported: true,
+        reason: 'supported',
+        message:
+          'Mock heart rate monitor is enabled (VITE_MOCK_HEART_RATE). No Bluetooth device is required.',
+      };
+    }
+    return getBluetoothSupportStatus();
+  });
   const [bluetoothAvailable, setBluetoothAvailable] = useState<boolean | null>(
     null,
   );

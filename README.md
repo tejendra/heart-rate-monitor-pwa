@@ -45,6 +45,18 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in Chrome.
 
+### Mock heart rate monitor (local dev)
+
+For UI and workout flow without a physical strap, development enables a simulated monitor via `.env.development`:
+
+```bash
+VITE_MOCK_HEART_RATE=true
+```
+
+Restart `npm run dev` after changing env vars. Use **Connect Heart Rate Monitor** as usual — no Bluetooth picker appears; BPM updates about once per second with synthetic RR data for HRV. The device shows as **Mock HR Monitor (dev)**.
+
+Set `VITE_MOCK_HEART_RATE=false` (or remove the variable) to test with a real monitor. The mock is only active when `import.meta.env.DEV` is true, so production builds never use it.
+
 ### Test on a phone (same Wi‑Fi)
 
 Web Bluetooth on a phone requires a **secure context**. Use an HTTPS tunnel or LAN HTTPS dev server.

@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { useWorkoutSession } from '../context/WorkoutContext';
 
 const navItems = [
   { to: '/', label: 'Workout', end: true },
@@ -7,34 +8,44 @@ const navItems = [
 ];
 
 export function Layout() {
+  const { isRecording } = useWorkoutSession();
+
   return (
-    <div className="app">
+    <div className={`app${isRecording ? ' app--workout-recording' : ''}`}>
       <a href="#main-content" className="skip-link">
         Skip to main content
       </a>
 
-      <header className="app-header">
-        <h1 className="app-title">Heart Rate Workout Tracker</h1>
-      </header>
+      {!isRecording && (
+        <header className="app-header">
+          <h1 className="app-title">Heart Rate Workout Tracker</h1>
+        </header>
+      )}
 
-      <main id="main-content" className="app-main" tabIndex={-1}>
+      <main
+        id="main-content"
+        className={`app-main${isRecording ? ' app-main--workout-recording' : ''}`}
+        tabIndex={-1}
+      >
         <Outlet />
       </main>
 
-      <nav className="app-nav" aria-label="Main navigation">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={({ isActive }) =>
-              isActive ? 'nav-link nav-link--active' : 'nav-link'
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
+      {!isRecording && (
+        <nav className="app-nav" aria-label="Main navigation">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                isActive ? 'nav-link nav-link--active' : 'nav-link'
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
     </div>
   );
 }
