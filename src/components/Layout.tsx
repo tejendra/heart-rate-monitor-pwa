@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { AppBrand } from './AppBrand';
 import { useWorkoutSession } from '../context/WorkoutContext';
 
 const navItems = [
@@ -18,7 +19,7 @@ export function Layout() {
 
       {!isRecording && (
         <header className="app-header">
-          <h1 className="app-title">Heart Rate Workout Tracker</h1>
+          <AppBrand />
         </header>
       )}
 

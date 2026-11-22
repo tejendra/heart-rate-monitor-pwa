@@ -60,16 +60,51 @@ button {
   padding: 1.5rem 1.25rem 0.75rem;
 }
 
+.app-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.app-brand__mark {
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.app-brand__ring {
+  fill: color-mix(in srgb, var(--accent) 16%, transparent);
+  stroke: color-mix(in srgb, var(--accent) 42%, transparent);
+  stroke-width: 1.5;
+}
+
+.app-brand__pulse {
+  color: #fff;
+}
+
+.app-brand__text {
+  min-width: 0;
+}
+
 .app-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.app-title__accent {
+  color: var(--accent);
 }
 
 .app-subtitle {
-  margin: 0.25rem 0 0;
+  margin: 0.3rem 0 0;
   color: var(--text-muted);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .app-main {
@@ -110,27 +145,27 @@ button {
 }
 
 .page h2 {
-  margin: 0;
+  margin: 0 0 1.25rem;
   font-size: 1.35rem;
 }
 
 .page-toolbar {
   display: flex;
-  justify-content: flex-end;
+  width: 100%;
   margin-bottom: 1.25rem;
 }
 
 .connection-indicator {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.45rem;
-  max-width: min(100%, 20rem);
+  width: 100%;
+  max-width: 100%;
   padding: 0.35rem 0.35rem 0.35rem 0.55rem;
   border: 1px solid #2a4a38;
   border-radius: 999px;
   background: #15241c;
   color: #7ddea6;
-  flex-shrink: 0;
 }
 
 .connection-indicator__signal {
@@ -235,22 +270,37 @@ button {
   margin-top: 1.25rem;
 }
 
-.button--stop-hold {
+.button--hold {
   position: relative;
   overflow: hidden;
   touch-action: none;
   user-select: none;
 }
 
-.button--stop-hold__progress {
+.button--hold__progress {
   position: absolute;
   inset: 0;
+  transform: scaleX(0);
   transform-origin: left center;
   background: rgba(255, 255, 255, 0.22);
   pointer-events: none;
 }
 
-.button--stop-hold__label {
+.button--hold--active .button--hold__progress {
+  animation: button-hold-progress var(--hold-duration, 5000ms) linear forwards;
+}
+
+@keyframes button-hold-progress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.button--hold__label {
   position: relative;
   z-index: 1;
 }
@@ -347,20 +397,19 @@ button {
   border: 1px solid color-mix(in srgb, var(--workout-zone-fg, #fff) 22%, transparent);
 }
 
-.workout-recording-fullscreen .button--stop-hold {
+.workout-recording-fullscreen .button--hold {
   color: var(--workout-zone-fg, #fff);
   background: color-mix(in srgb, var(--workout-zone-fg, #fff) 14%, transparent);
   border: 2px solid color-mix(in srgb, var(--workout-zone-fg, #fff) 55%, transparent);
 }
 
-.workout-recording-fullscreen .button--stop-hold__progress {
+.workout-recording-fullscreen .button--hold__progress {
   background: color-mix(in srgb, var(--workout-zone-fg, #fff) 28%, transparent);
 }
 
 .workout-recording-fullscreen__content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   gap: 1rem;
   width: 100%;
   max-width: 480px;
@@ -372,19 +421,43 @@ button {
     max(1.25rem, env(safe-area-inset-left));
 }
 
-.workout-recording-fullscreen__card {
+.live-workout-session-above-bpm {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: min(100%, 22rem);
+  margin-bottom: 0.35rem;
+}
+
+.live-workout-session-above-bpm__elapsed {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.workout-recording-fullscreen__center {
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 0;
-  border-color: transparent;
-  background: transparent;
+  min-height: 0;
+}
+
+.workout-recording-fullscreen__center .live-workout-session-above-bpm__elapsed {
+  color: var(--workout-zone-fg, #fff);
+}
+
+.workout-recording-fullscreen__center .live-workout-session-above-bpm {
+  color: var(--workout-zone-fg-muted, var(--text-muted));
+}
+
+.workout-recording-fullscreen__footer {
+  flex-shrink: 0;
 }
 
 .workout-recording-fullscreen .workout-stop-controls {
-  margin-top: auto;
-  padding-top: 2rem;
+  margin-top: 0;
 }
 
 .app--workout-recording {
@@ -457,6 +530,7 @@ button {
 
 .quick-links {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.75rem;
 }
 
@@ -666,6 +740,44 @@ button {
   height: 220px;
 }
 
+.heart-rate-zones-card .chart-container {
+  margin-bottom: 1rem;
+}
+
+.zone-time-summary {
+  padding-top: 0.15rem;
+}
+
+.zone-time-summary__heading {
+  margin: 0 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.zone-time-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.zone-time-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+}
+
+.zone-time-legend__time {
+  color: #fff;
+  font-weight: 600;
+}
+
 .form {
   display: grid;
   gap: 1rem;
@@ -729,7 +841,9 @@ button {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.form-field input {
+.form-field input,
+.form-field select,
+.form-field textarea {
   width: 100%;
   padding: 0.75rem 0.85rem;
   border-radius: 0.75rem;
@@ -737,6 +851,21 @@ button {
   background: var(--surface-elevated);
   color: #fff;
   font: inherit;
+}
+
+.form-field textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.report-activity__title {
+  margin: 0 0 1rem;
+  font-size: 1.05rem;
+}
+
+.report-activity__description-field {
+  margin-top: 1rem;
 }
 
 .form-section h3 {
@@ -759,14 +888,31 @@ button {
   color: #7ddea6;
 }
 
-.unit-toggle {
-  display: inline-flex;
+.form-field__weight-row {
+  display: flex;
+  align-items: stretch;
   gap: 0.5rem;
 }
 
+.form-field__weight-row input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+.form-field__weight-row .unit-toggle {
+  flex-shrink: 0;
+}
+
+.unit-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 0.35rem;
+}
+
 .unit-toggle__button {
-  padding: 0.45rem 0.85rem;
-  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.75rem;
   border: 1px solid var(--border);
   background: var(--surface-elevated);
   color: var(--text-muted);

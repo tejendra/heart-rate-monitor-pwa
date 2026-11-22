@@ -49,6 +49,7 @@ export function normalizeUserSettings(
     weight,
     weightUnit,
     age: settings.age,
+    sex: settings.sex,
     zoneMethod: settings.zoneMethod,
     manualZoneBounds: settings.manualZoneBounds,
   };

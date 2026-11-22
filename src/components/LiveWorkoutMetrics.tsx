@@ -35,7 +35,11 @@ export type LiveWorkoutMetricsProps = {
   currentZone: ZoneClassification | null;
   aboveZone5Target: boolean;
   bpmSize?: 'default' | 'large';
+  showBpm?: boolean;
   showSessionDetails?: boolean;
+  showContactHint?: boolean;
+  showZone5Hint?: boolean;
+  sessionDetailLayout?: 'default' | 'above-bpm';
 };
 
 export function LiveWorkoutMetrics({
@@ -45,27 +49,52 @@ export function LiveWorkoutMetrics({
   currentZone,
   aboveZone5Target,
   bpmSize = 'default',
+  showBpm = true,
   showSessionDetails = true,
+  showContactHint = true,
+  showZone5Hint = true,
+  sessionDetailLayout = 'default',
 }: LiveWorkoutMetricsProps) {
+  const compactSessionAboveBpm =
+    sessionDetailLayout === 'above-bpm' && showSessionDetails;
+
   return (
     <>
-      <div
-        className={`live-bpm-display ${
-          bpmSize === 'large' ? 'live-bpm-display--large' : ''
-        }`}
-        aria-live="polite"
-        aria-label={`Current heart rate ${formatBpm(latestBpm)} beats per minute`}
-      >
-        <p className="bpm-placeholder">{formatBpm(latestBpm)}</p>
-        <p className="bpm-label">BPM</p>
-      </div>
-      {contactDetected === false && (
+      {compactSessionAboveBpm && (
+        <div
+          className="live-workout-session-above-bpm"
+          aria-label={`Elapsed ${formatElapsed(elapsedMs)}. ${formatZone(currentZone)}`}
+        >
+          <span className="live-workout-session-above-bpm__elapsed" aria-live="polite">
+            {formatElapsed(elapsedMs)}
+          </span>
+          <strong
+            className={zoneClassName(currentZone)}
+            aria-live="polite"
+          >
+            {formatZone(currentZone)}
+          </strong>
+        </div>
+      )}
+      {showBpm && (
+        <div
+          className={`live-bpm-display ${
+            bpmSize === 'large' ? 'live-bpm-display--large' : ''
+          }`}
+          aria-live="polite"
+          aria-label={`Current heart rate ${formatBpm(latestBpm)} beats per minute`}
+        >
+          <p className="bpm-placeholder">{formatBpm(latestBpm)}</p>
+          <p className="bpm-label">BPM</p>
+        </div>
+      )}
+      {showContactHint && contactDetected === false && (
         <p className="hint hint--warning" role="status">
           Sensor contact not detected. Adjust your strap.
         </p>
       )}
 
-      {showSessionDetails && (
+      {showSessionDetails && sessionDetailLayout === 'default' && (
         <>
           <p className="metric-row">
             <span>Elapsed</span>
@@ -79,7 +108,7 @@ export function LiveWorkoutMetrics({
             </strong>
           </div>
 
-          {aboveZone5Target && (
+          {showZone5Hint && aboveZone5Target && (
             <p className="hint hint--warning" role="status">
               Heart rate is above your zone 5 target — consider slowing down.
             </p>

@@ -2,9 +2,14 @@ import type { HeartRateSample } from '../types';
 import {
   BATTERY_LEVEL_UUID,
   BATTERY_SERVICE_UUID,
+  DEVICE_INFORMATION_SERVICE_UUID,
   HEART_RATE_MEASUREMENT_UUID,
   HEART_RATE_SERVICE_UUID,
 } from './constants';
+import {
+  formatMonitorDisplayName,
+  readMonitorDeviceDetails,
+} from './monitorDeviceDetails';
 import { parseBatteryLevel } from './parseBatteryLevel';
 import { toHeartRateSample } from './parseHeartRateMeasurement';
 
@@ -28,13 +33,10 @@ type SampleListener = (sample: HeartRateSample) => void;
 export class HeartRateService {
   private device: BluetoothDevice | null = null;
   private characteristic: BluetoothRemoteGATTCharacteristic | null = null;
-  private batteryCharacteristic: BluetoothRemoteGATTCharacteristic | null =
-    null;
   private status: HeartRateConnectionStatus = { state: 'disconnected' };
   private listeners = new Set<StatusListener>();
   private sampleListeners = new Set<SampleListener>();
   private onCharacteristicValue: ((event: Event) => void) | null = null;
-  private onBatteryValue: ((event: Event) => void) | null = null;
   private onDeviceDisconnect: ((event: Event) => void) | null = null;
 
   subscribe(listener: StatusListener): () => void {
@@ -71,7 +73,11 @@ export class HeartRateService {
     try {
       const device = await navigator.bluetooth.requestDevice({
         filters: [{ services: [HEART_RATE_SERVICE_UUID] }],
-        optionalServices: [HEART_RATE_SERVICE_UUID, BATTERY_SERVICE_UUID],
+        optionalServices: [
+          HEART_RATE_SERVICE_UUID,
+          BATTERY_SERVICE_UUID,
+          DEVICE_INFORMATION_SERVICE_UUID,
+        ],
       });
 
       this.attachDevice(device);
@@ -119,11 +125,13 @@ export class HeartRateService {
       );
       await characteristic.startNotifications();
 
-      await this.setupBatteryLevel(server);
+      await Promise.all([
+        this.setupBatteryLevel(server),
+        this.setupDeviceIdentity(server),
+      ]);
 
       this.updateStatus({
         state: 'connected',
-        deviceName: device.name ?? 'Heart rate monitor',
         error: undefined,
       });
     } catch (error) {
@@ -186,13 +194,6 @@ export class HeartRateService {
       );
     }
 
-    if (this.batteryCharacteristic && this.onBatteryValue) {
-      this.batteryCharacteristic.removeEventListener(
-        'characteristicvaluechanged',
-        this.onBatteryValue,
-      );
-    }
-
     if (this.device && this.onDeviceDisconnect) {
       this.device.removeEventListener(
         'gattserverdisconnected',
@@ -201,9 +202,7 @@ export class HeartRateService {
     }
 
     this.characteristic = null;
-    this.batteryCharacteristic = null;
     this.onCharacteristicValue = null;
-    this.onBatteryValue = null;
     this.onDeviceDisconnect = null;
     this.device = null;
   }
@@ -213,35 +212,17 @@ export class HeartRateService {
       const service = await server.getPrimaryService(BATTERY_SERVICE_UUID);
       const characteristic = await service.getCharacteristic(BATTERY_LEVEL_UUID);
       const value = await characteristic.readValue();
-      this.applyBatteryValue(value);
-
-      this.batteryCharacteristic = characteristic;
-      this.onBatteryValue = (event: Event) => {
-        const target = event.target as BluetoothRemoteGATTCharacteristic;
-        if (!target.value) {
-          return;
-        }
-        this.applyBatteryValue(target.value);
-      };
-
-      characteristic.addEventListener(
-        'characteristicvaluechanged',
-        this.onBatteryValue,
-      );
-
-      try {
-        await characteristic.startNotifications();
-      } catch {
-        // One-shot read is enough when notifications are unavailable.
-      }
+      const percent = parseBatteryLevel(value);
+      this.updateStatus({ batteryLevelPercent: percent });
     } catch {
       // Many heart rate monitors do not expose the Battery Service.
     }
   }
 
-  private applyBatteryValue(value: DataView) {
-    const percent = parseBatteryLevel(value);
-    this.updateStatus({ batteryLevelPercent: percent });
+  private async setupDeviceIdentity(server: BluetoothRemoteGATTServer) {
+    const details = await readMonitorDeviceDetails(server);
+    const displayName = formatMonitorDisplayName(this.status.deviceName, details);
+    this.updateStatus({ deviceName: displayName });
   }
 
   private updateStatus(patch: Partial<HeartRateConnectionStatus>) {

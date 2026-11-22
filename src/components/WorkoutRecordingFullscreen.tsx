@@ -38,18 +38,25 @@ export function WorkoutRecordingFullscreen({
     >
       <div className="workout-recording-fullscreen__content">
         {disconnectMessage && (
-          <div className="banner banner--warning" role="alert">
+          <div
+            className="banner banner--warning workout-recording-fullscreen__banner"
+            role="alert"
+          >
             <p className="banner__title">Heart rate monitor disconnected</p>
             <p className="banner__text">{disconnectMessage}</p>
           </div>
         )}
 
-        <div className="card card--centered workout-recording-fullscreen__card">
+        <div className="workout-recording-fullscreen__center">
           <LiveWorkoutMetrics
             currentZone={currentZone}
             {...metrics}
             bpmSize="large"
+            sessionDetailLayout="above-bpm"
           />
+        </div>
+
+        <div className="workout-recording-fullscreen__footer">
           <LongPressStopButton onStop={onStop} />
         </div>
       </div>

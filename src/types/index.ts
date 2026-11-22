@@ -40,6 +40,17 @@ export interface ZoneSeriesPoint {
   zone: HeartRateZone;
 }
 
+export type WorkoutActivityType = 'treadmill_run' | 'outdoor_run';
+
+export const WORKOUT_ACTIVITY_OPTIONS: Array<{
+  value: '' | WorkoutActivityType;
+  label: string;
+}> = [
+  { value: '', label: 'Select activity' },
+  { value: 'treadmill_run', label: 'Treadmill run' },
+  { value: 'outdoor_run', label: 'Outdoor run' },
+];
+
 export interface WorkoutReport {
   id: string;
   startedAt: string;
@@ -54,11 +65,15 @@ export interface WorkoutReport {
   zoneSeries: ZoneSeriesPoint[];
   hrv: HrvSummary;
   samples: HeartRateSample[];
+  activityType?: WorkoutActivityType;
+  activityDescription?: string;
   appVersion: '1.0.0';
 }
 
 export type ZoneMethod = 'karvonen' | 'manual';
 export type WeightUnit = 'kg' | 'lb';
+
+export type BiologicalSex = 'male' | 'female';
 
 export interface UserSettings {
   maxHeartRate: number;
@@ -66,6 +81,8 @@ export interface UserSettings {
   weight?: number | null;
   weightUnit: WeightUnit;
   age?: number | null;
+  /** Used by the Keytel calorie estimate when age and weight are set. */
+  sex?: BiologicalSex | null;
   zoneMethod: ZoneMethod;
   manualZoneBounds?: [number, number, number, number];
 }

@@ -3,6 +3,7 @@ import {
   type ZoneClassification,
 } from '../analytics/zones';
 import { DEFAULT_USER_SETTINGS, type HeartRateSample } from '../types';
+import { formatMonitorDisplayName } from './monitorDeviceDetails';
 import { MOCK_DEVICE_NAME } from './mockHeartRate';
 import type { HeartRateConnectionStatus } from './heartRateService';
 
@@ -92,7 +93,10 @@ export class MockHeartRateService {
 
     this.updateStatus({
       state: 'connected',
-      deviceName: MOCK_DEVICE_NAME,
+      deviceName: formatMonitorDisplayName(MOCK_DEVICE_NAME, {
+        manufacturer: 'Mock BLE',
+        model: 'HR Strap (development)',
+      }),
       batteryLevelPercent: MOCK_BATTERY_LEVEL_PERCENT,
       error: undefined,
     });
@@ -144,7 +148,10 @@ export class MockHeartRateService {
     }
     this.updateStatus({
       state: 'connected',
-      deviceName: MOCK_DEVICE_NAME,
+      deviceName: formatMonitorDisplayName(MOCK_DEVICE_NAME, {
+        manufacturer: 'Mock BLE',
+        model: 'HR Strap (development)',
+      }),
       latestSample: sample,
       error: undefined,
     });

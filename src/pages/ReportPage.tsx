@@ -5,11 +5,12 @@ import {
   ErrorState,
   LoadingState,
 } from '../components/PageState';
+import { LongPressButton } from '../components/LongPressButton';
 import { ReportSummary } from '../components/ReportSummary';
 import { formatWorkoutDate } from '../components/WorkoutList';
 import { useWorkoutSession } from '../context/WorkoutContext';
 import { downloadWorkoutReport } from '../export/jsonExporter';
-import { deleteWorkout, getWorkout } from '../storage/workoutStore';
+import { deleteWorkout, getWorkout, saveWorkout } from '../storage/workoutStore';
 import type { WorkoutReport } from '../types';
 
 export function ReportPage() {
@@ -19,6 +20,7 @@ export function ReportPage() {
   const [report, setReport] = useState<WorkoutReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -60,13 +62,19 @@ export function ReportPage() {
     };
   }, [id, lastReport]);
 
+  async function handleActivityReportChange(next: WorkoutReport) {
+    setReport(next);
+    setSaveError(null);
+
+    try {
+      await saveWorkout(next);
+    } catch {
+      setSaveError('Unable to save activity details. Try again.');
+    }
+  }
+
   async function handleDelete() {
     if (!report) {
-      return;
-    }
-
-    const shouldDelete = window.confirm('Delete this workout report?');
-    if (!shouldDelete) {
       return;
     }
 
@@ -79,33 +87,34 @@ export function ReportPage() {
       <h2 id="report-title">
         {report ? formatWorkoutDate(report.startedAt) : 'Workout Report'}
       </h2>
-      <p className="page-description">
-        Summary stats, zone breakdown, and HRV from your completed workout.
-      </p>
-
       {loading ? (
         <LoadingState message="Loading report..." />
       ) : error ? (
         <ErrorState message={error} onRetry={() => navigate('/history')} />
       ) : report ? (
         <>
-          <ReportSummary report={report} />
+          <ReportSummary
+            report={report}
+            onActivityReportChange={(next) =>
+              void handleActivityReportChange(next)
+            }
+            activitySaveError={saveError}
+          />
           <div className="quick-links">
+            <LongPressButton
+              className="button button--secondary button--hold"
+              label="Delete Workout"
+              ariaLabel="Long hold for 3 seconds to delete this workout report"
+              holdDurationMs={3000}
+              onComplete={() => void handleDelete()}
+            />
             <button
               type="button"
-              className="button button--secondary"
+              className="button button--primary"
               aria-label="Export workout report as JSON"
               onClick={() => downloadWorkoutReport(report)}
             >
               Export JSON
-            </button>
-            <button
-              type="button"
-              className="button button--primary"
-              aria-label="Delete workout report"
-              onClick={() => void handleDelete()}
-            >
-              Delete Workout
             </button>
           </div>
         </>

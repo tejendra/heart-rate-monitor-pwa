@@ -1,6 +1,6 @@
-# Heart Rate Monitor PWA
+# ZonePulse
 
-A browser-based Progressive Web App that connects to a standard Bluetooth heart rate monitor, records workouts, and generates reports with heart rate zones, calories, and HRV.
+**ZonePulse** is a browser-based Progressive Web App that connects to a standard Bluetooth heart rate monitor, records workouts, and generates reports with heart rate zones, calories, and HRV.
 
 ## Features
 
@@ -160,6 +160,8 @@ Verified during development with:
 - Standard BLE chest straps using the Bluetooth Heart Rate Service (`0x180D`)
 
 Any monitor that exposes the standard Heart Rate GATT profile should work.
+
+When connected, the app reads **battery level** and **Device Information** (manufacturer and model) once per session to label the connection pill. These are single GATT reads at connect time and do not add ongoing radio traffic beyond heart rate notifications.
 
 ## Project structure
 

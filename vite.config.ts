@@ -22,9 +22,10 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.svg'],
       manifest: {
-        name: 'Heart Rate Monitor',
-        short_name: 'HR Monitor',
-        description: 'Connect to a Bluetooth heart rate monitor and track workouts',
+        name: 'ZonePulse',
+        short_name: 'ZonePulse',
+        description:
+          'Connect a Bluetooth heart rate strap and train with live BPM and Karvonen zones.',
         theme_color: '#c41e3a',
         background_color: '#0f1419',
         display: 'standalone',

@@ -1,14 +1,24 @@
 import { isHrvAvailable } from '../analytics/hrv';
 import { formatElapsed } from '../workout/sessionManager';
-import { HeartRateChart } from './HeartRateChart';
-import { ZoneTimeChart } from './ZoneTimeChart';
+import { HeartRateZonesCard } from './HeartRateZonesCard';
+import { ReportActivityFields } from './ReportActivityFields';
 import type { WorkoutReport } from '../types';
 
 function formatCalories(calories: number): string {
   return `${calories} kcal`;
 }
 
-export function ReportSummary({ report }: { report: WorkoutReport }) {
+type ReportSummaryProps = {
+  report: WorkoutReport;
+  onActivityReportChange?: (report: WorkoutReport) => void;
+  activitySaveError?: string | null;
+};
+
+export function ReportSummary({
+  report,
+  onActivityReportChange,
+  activitySaveError,
+}: ReportSummaryProps) {
   const hrvAvailable = isHrvAvailable(report.hrv);
 
   return (
@@ -36,8 +46,19 @@ export function ReportSummary({ report }: { report: WorkoutReport }) {
         </article>
       </div>
 
-      <ZoneTimeChart report={report} />
-      <HeartRateChart report={report} />
+      <HeartRateZonesCard report={report} />
+
+      {onActivityReportChange && (
+        <ReportActivityFields
+          report={report}
+          onReportChange={onActivityReportChange}
+        />
+      )}
+      {activitySaveError && (
+        <p className="hint hint--error" role="alert">
+          {activitySaveError}
+        </p>
+      )}
 
       <div className="card">
         <h3>Heart rate variability</h3>

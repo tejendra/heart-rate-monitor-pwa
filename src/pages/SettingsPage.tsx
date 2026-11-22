@@ -33,8 +33,8 @@ function parseOptionalNumber(value: string): number | undefined {
 
 function getWeightInputBounds(unit: WeightUnit) {
   return unit === 'lb'
-    ? { min: 66, max: 551, step: 1, label: 'Weight (lb, optional)' }
-    : { min: 30, max: 250, step: 0.1, label: 'Weight (kg, optional)' };
+    ? { min: 66, max: 551, step: 1, label: 'Weight' }
+    : { min: 30, max: 250, step: 0.1, label: 'Weight' };
 }
 
 function canSaveSettings(settings: UserSettings): boolean {
@@ -190,7 +190,7 @@ export function SettingsPage() {
 
         <label className="form-field">
           <span className="form-field__label">
-            Age (optional)
+            Age
             <FieldTooltip label="What age is used for">
               Shows a Gellish max heart rate recommendation below and enables a more accurate calorie estimate on workout reports.
             </FieldTooltip>
@@ -207,6 +207,33 @@ export function SettingsPage() {
               }))
             }
           />
+        </label>
+
+        <label className="form-field">
+          <span className="form-field__label">
+            Sex
+            <FieldTooltip label="What sex is used for">
+              When age and weight are set, calorie estimates use the Keytel
+              heart-rate equations, which differ for men and women. If unset, the
+              men&apos;s equation is used.
+            </FieldTooltip>
+          </span>
+          <select
+            value={form.sex ?? ''}
+            onChange={(event) =>
+              setForm((current) => ({
+                ...current,
+                sex:
+                  event.target.value === ''
+                    ? null
+                    : (event.target.value as 'male' | 'female'),
+              }))
+            }
+          >
+            <option value="">Not set</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
         </label>
 
         <label className="form-field">
@@ -232,7 +259,7 @@ export function SettingsPage() {
           />
           {recommendedMaxHeartRate !== null && (
             <span className="hint">
-              Recommended for your age (Gellish): {recommendedMaxHeartRate} bpm
+              {recommendedMaxHeartRate} bpm recommended for your age
             </span>
           )}
         </label>
@@ -241,12 +268,13 @@ export function SettingsPage() {
           <span className="form-field__label">
             {weightBounds.label}
             <FieldTooltip label="What weight is used for">
-              Calories on workout reports are estimated from your
-              session duration and average heart rate:
+              Report values are in <strong>kcal</strong> (kilocalories—the same
+              &quot;Calories&quot; shown on food labels). Estimates use session
+              duration and average heart rate:
               <br />
               <br />
               <strong>Weight + age:</strong> Keytel formula using heart rate,
-              weight, age, and time.
+              weight, age, sex, and time.
               <br />
               <br />
               <strong>Weight only:</strong> MET estimate from workout intensity,
@@ -257,43 +285,48 @@ export function SettingsPage() {
               154 lbs.
             </FieldTooltip>
           </span>
-          <div className="unit-toggle" role="group" aria-label="Weight unit">
-            <button
-              type="button"
-              className={
-                form.weightUnit === 'kg'
-                  ? 'unit-toggle__button unit-toggle__button--active'
-                  : 'unit-toggle__button'
+          <div className="form-field__weight-row">
+            <input
+              type="number"
+              min={weightBounds.min}
+              max={weightBounds.max}
+              step={weightBounds.step}
+              value={form.weight ?? ''}
+              aria-label={
+                form.weightUnit === 'kg' ? 'Weight in kilograms' : 'Weight in pounds'
               }
-              onClick={() => handleWeightUnitChange('kg')}
-            >
-              kg
-            </button>
-            <button
-              type="button"
-              className={
-                form.weightUnit === 'lb'
-                  ? 'unit-toggle__button unit-toggle__button--active'
-                  : 'unit-toggle__button'
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  weight: parseOptionalNumber(event.target.value),
+                }))
               }
-              onClick={() => handleWeightUnitChange('lb')}
-            >
-              lb
-            </button>
+            />
+            <div className="unit-toggle" role="group" aria-label="Weight unit">
+              <button
+                type="button"
+                className={
+                  form.weightUnit === 'kg'
+                    ? 'unit-toggle__button unit-toggle__button--active'
+                    : 'unit-toggle__button'
+                }
+                onClick={() => handleWeightUnitChange('kg')}
+              >
+                kg
+              </button>
+              <button
+                type="button"
+                className={
+                  form.weightUnit === 'lb'
+                    ? 'unit-toggle__button unit-toggle__button--active'
+                    : 'unit-toggle__button'
+                }
+                onClick={() => handleWeightUnitChange('lb')}
+              >
+                lb
+              </button>
+            </div>
           </div>
-          <input
-            type="number"
-            min={weightBounds.min}
-            max={weightBounds.max}
-            step={weightBounds.step}
-            value={form.weight ?? ''}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                weight: parseOptionalNumber(event.target.value),
-              }))
-            }
-          />
         </div>
 
         <div className="form-section">
