@@ -71,7 +71,7 @@ export function ReportActivityFields({
       clearTimeout(descriptionDebounceRef.current);
     }
 
-    descriptionDebounceRef.current = window.setTimeout(() => {
+    descriptionDebounceRef.current = setTimeout(() => {
       publish({
         activityType: activityType || undefined,
         activityDescription: value,
